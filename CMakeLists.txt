@@ -41,6 +41,8 @@ enable_testing()
 
 # Now simply link against gtest or gtest_main as needed. Eg
 include_directories("test")
+include_directories(".")
+
 add_executable(AtomicRingBufferTest
     "AtomicRingBuffer/AtomicRingBuffer.cpp"
     
