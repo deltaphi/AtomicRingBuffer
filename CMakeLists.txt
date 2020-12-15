@@ -5,6 +5,14 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
+option(ENABLE_COVERAGE "enable_language measurement option add_compile_definitions coverage" OFF)
+
+if (ENABLE_COVERAGE)
+    include(CodeCoverage.cmake)
+    append_coverage_compiler_flags()
+endif()
+
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
