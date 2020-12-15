@@ -58,3 +58,12 @@ add_executable(AtomicRingBufferTest
 )
 target_link_libraries(AtomicRingBufferTest gtest_main gmock)
 add_test(NAME gtest_AtomicRingBufferTest_test COMMAND AtomicRingBufferTest)
+
+if (ENABLE_COVERAGE)
+setup_target_for_coverage_gcovr_html(
+  NAME AtomicRingBufferTest-gcovr
+  EXECUTABLE ctest
+  DEPENDENCIES AtomicRingBufferTest
+  EXCLUDE build test
+)
+endif()
