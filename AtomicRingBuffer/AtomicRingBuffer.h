@@ -64,7 +64,7 @@ class AtomicRingBuffer {
    * Sends of allocated bytes. Can send parts of an allocaton but cannot send
    * out-of-order. Cannot send bytes wrapping around the buffer.
    */
-  size_type commit(pointer_type allocationStart, size_type numElems) {
+  size_type publish(const pointer_type allocationStart, size_type numElems) {
     size_type oldIdx = writeIdx_;
 
     size_type requestedIndex = (allocationStart - buffer_);
