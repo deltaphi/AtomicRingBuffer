@@ -35,3 +35,5 @@
 # IDE Specifics
 out
 .vs
+build
+.vscode
