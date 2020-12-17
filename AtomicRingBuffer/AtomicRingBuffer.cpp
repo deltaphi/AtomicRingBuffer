@@ -80,10 +80,14 @@ AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type
   }
 }
 
-AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type &data, size_type len) {
+AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type data, size_type len) {
   if (buffer_ <= data && data <= &buffer_[bufferSize_ - 1]) {
-    // not past-the-end
+    size_type requestedIdx = data - buffer_;
     size_type currentReadIdx = readIdx_;
+    if (requestedIdx != currentReadIdx) {
+      return 0;
+    }
+    // not past-the-end
     size_type currentWriteIdx = writeIdx_;
     size_type endOfReadableArea = (currentReadIdx <= currentWriteIdx) ? currentWriteIdx : bufferSize_;
     size_type numElemsFreeable = endOfReadableArea - currentReadIdx;

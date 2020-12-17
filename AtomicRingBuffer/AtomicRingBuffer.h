@@ -44,7 +44,7 @@ class AtomicRingBuffer {
   /**
    * Free up space in the buffer.
    */
-  size_type consume(const pointer_type &data, size_type len);
+  size_type consume(const pointer_type data, size_type len);
 
   size_type capacity() const { return bufferSize_; }
 
