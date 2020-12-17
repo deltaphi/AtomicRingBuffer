@@ -411,4 +411,18 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_FullPeek_PartialConsume) {
   }
 }
 
-// Test wrap-around publish with/without accept partial
+TEST_F(BufferedAtomicBufferFixture, SkipPublish) {
+    {
+    uint8_t* mem = nullptr;
+    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
+    EXPECT_EQ(buffer, mem);
+    for (uint8_t i = 0; i < 5; ++i) {
+      mem[i] = i;
+    }
+
+    EXPECT_EQ(ringBuffer.publish(mem + 3, 2), 0);
+
+    EXPECT_EQ(ringBuffer.size(), 0);
+    EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
+  }
+}

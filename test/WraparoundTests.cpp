@@ -5,6 +5,8 @@
 
 #include "AtomicRingBuffer/AtomicRingBuffer.h"
 
+// Test wrap-around publish with/without accept partial
+
 TEST_F(FilledAtomicBufferFixture, MatchingAllocate_Full) {
   AtomicRingBuffer::pointer_type mem = nullptr;
   EXPECT_EQ(ringBuffer.allocate(mem, 3, false), 3);
