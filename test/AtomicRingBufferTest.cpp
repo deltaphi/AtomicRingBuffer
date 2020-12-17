@@ -5,7 +5,6 @@
 
 #include "AtomicRingBuffer/AtomicRingBuffer.h"
 
-
 // Test operation of an uninitialized buffer
 
 TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Size_Capacity) {

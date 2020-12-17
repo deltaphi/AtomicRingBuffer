@@ -25,8 +25,11 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
   }
 
   size_type newAllocateIdx = currentAllocateIdx + numElems;
+  if (newAllocateIdx == bufferSize_) {
+    newAllocateIdx = 0;
+  }
 
-  if (allocateIdx_.compare_exchange_strong(currentAllocateIdx, newAllocateIdx)) {
+  if (allocateIdx_.compare_exchange_strong(currentAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
     memory = &buffer_[currentAllocateIdx];
     return numElems;
   } else {
@@ -41,19 +44,22 @@ AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type allocat
 
       size_type requestedIndex = (allocationStart - buffer_);
 
-      if (writeIdx_.load() != requestedIndex) {
+      if (oldIdx != requestedIndex) {
         // Out-of-order commit
         return 0;
       } else {
         size_type newIdx = oldIdx + numElems;
         if (newIdx > bufferSize_) {
-          newIdx = bufferSize_;  // TODO: After wrap-around make sure not to
-                                 // overwrite the read part.
+          // Something went wrong, don't modify anything
+          return 0;
+        } else if (newIdx == bufferSize_) {
+          // Wrap around
+          newIdx = 0;
         }
 
         // Check if the memory to be published was previously allocated.
-        if (writeIdx_.compare_exchange_strong(oldIdx, newIdx)) {
-          return newIdx - oldIdx;
+        if (writeIdx_.compare_exchange_strong(oldIdx, newIdx, std::memory_order_acq_rel)) {
+          return numElems;
         } else {
           return 0;
         }
@@ -98,7 +104,13 @@ AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type data, s
       len = numElemsFreeable;
     }
     size_type newReadIdx = currentReadIdx + len;
-    if (readIdx_.compare_exchange_strong(currentReadIdx, newReadIdx)) {
+    if (newReadIdx > bufferSize_) {
+      // Something went wrong.
+      return 0;
+    } else if (newReadIdx == bufferSize_) {
+      newReadIdx = 0;
+    }
+    if (readIdx_.compare_exchange_strong(currentReadIdx, newReadIdx, std::memory_order_acq_rel)) {
       return len;
     } else {
       return 0;

@@ -54,7 +54,9 @@ include_directories(".")
 add_executable(AtomicRingBufferTest
     "AtomicRingBuffer/AtomicRingBuffer.cpp"
     
+    "test/Mocks.cpp"
     "test/AtomicRingBufferTest.cpp"
+    "test/WraparoundTests.cpp"
 )
 target_link_libraries(AtomicRingBufferTest gtest_main gmock)
 add_test(NAME gtest_AtomicRingBufferTest_test COMMAND AtomicRingBufferTest)
