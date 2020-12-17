@@ -3,13 +3,14 @@
 
 #include <atomic>
 #include <cstdint>
+#include <cstddef>
 
 class AtomicRingBuffer {
  public:
   using value_type = uint8_t;
   using pointer_type = value_type *;
-  using size_type = uint8_t;
-  using atomic_size_type = std::atomic_uint8_t;
+  using size_type = std::size_t;
+  using atomic_size_type = std::atomic_size_t;
 
   AtomicRingBuffer() : buffer_(nullptr), bufferSize_(0), writeIdx_(0), allocateIdx_(0), readIdx_(0) {}
 
