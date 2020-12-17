@@ -46,6 +46,16 @@ class AtomicRingBuffer {
    */
   size_type consume(const pointer_type &data, size_type len);
 
+  size_type capacity() const { return bufferSize_; }
+
+  size_type size() const {
+    if (bufferSize_ == 0) {
+      return 0;
+    } else {
+      return (writeIdx_ - readIdx_) % bufferSize_;
+    }
+  }
+
  private:
   pointer_type buffer_;
   size_type bufferSize_;
