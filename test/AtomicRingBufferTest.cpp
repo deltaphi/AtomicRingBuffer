@@ -28,6 +28,8 @@ class BufferedAtomicBufferFixture : public NoBufferAtomicBufferFixture {
   // void TearDown() {}
 };
 
+const AtomicRingBuffer::size_type NoBufferAtomicBufferFixture::kBufferSize;
+
 // Test operation of an uninitialized buffer
 
 TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Size_Capacity) {
