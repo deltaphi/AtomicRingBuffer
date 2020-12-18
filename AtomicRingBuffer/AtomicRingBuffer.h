@@ -2,8 +2,8 @@
 #define __ATOMIC_RING_BUFFER__H__
 
 #include <atomic>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 
 class AtomicRingBuffer {
  public:

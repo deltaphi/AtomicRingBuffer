@@ -412,7 +412,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_FullPeek_PartialConsume) {
 }
 
 TEST_F(BufferedAtomicBufferFixture, SkipPublish) {
-    {
+  {
     uint8_t* mem = nullptr;
     EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
     EXPECT_EQ(buffer, mem);
