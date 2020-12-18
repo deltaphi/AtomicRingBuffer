@@ -130,4 +130,26 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
   }
 }
 
+TEST_F(BufferedAtomicBufferFixture, FullCircle_WriteBeforeRead) {
+  {
+    AtomicRingBuffer::pointer_type mem = nullptr;
+    ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, false), kBufferSize);
+    // Push so that the buffer is completely full
+    ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
+  }
+
+  {
+    AtomicRingBuffer::pointer_type mem = nullptr;
+    // Peek while the writeIdx is lower than the readIdx
+
+    // Case 1: Do not accept a partial result.
+    EXPECT_EQ(ringBuffer.peek(mem, 8, false), 0);
+
+    // Case 2: Accept a partial result.
+    ASSERT_EQ(ringBuffer.peek(mem, 8, true), 2);
+
+    EXPECT_EQ(ringBuffer.consume(mem, 8), 8);
+  }
+}
+
 }  // namespace AtomicRingBuffer
