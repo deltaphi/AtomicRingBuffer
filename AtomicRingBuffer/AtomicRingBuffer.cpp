@@ -1,5 +1,7 @@
 #include "AtomicRingBuffer/AtomicRingBuffer.h"
 
+namespace AtomicRingBuffer {
+
 AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, size_type numElems,
                                                        bool partial_acceptable) {
   memory = nullptr;
@@ -120,3 +122,5 @@ AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type data, s
     return 0;
   }
 }
+
+}  // namespace AtomicRingBuffer

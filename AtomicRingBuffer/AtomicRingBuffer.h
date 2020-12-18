@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace AtomicRingBuffer {
+
 class AtomicRingBuffer {
  public:
   using value_type = uint8_t;
@@ -70,5 +72,7 @@ class AtomicRingBuffer {
   // From where can be read
   atomic_size_type readIdx_;
 };
+
+}  // namespace AtomicRingBuffer
 
 #endif  // !__ATOMIC_RING_BUFFER__H__

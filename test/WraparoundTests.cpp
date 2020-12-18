@@ -5,6 +5,8 @@
 
 #include "AtomicRingBuffer/AtomicRingBuffer.h"
 
+namespace AtomicRingBuffer {
+
 // Test wrap-around publish with/without accept partial
 
 TEST_F(FilledAtomicBufferFixture, MatchingAllocate_Full) {
@@ -127,3 +129,5 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
     }
   }
 }
+
+}  // namespace AtomicRingBuffer

@@ -6,6 +6,8 @@
 
 #include "AtomicRingBuffer/AtomicRingBuffer.h"
 
+namespace AtomicRingBuffer {
+
 class NoBufferAtomicBufferFixture : public ::testing::Test {
  public:
   // void SetUp() {}
@@ -60,5 +62,7 @@ class FilledAtomicBufferFixture : public BufferedAtomicBufferFixture {
 
   constexpr static const AtomicRingBuffer::size_type kInitialFill = 7;
 };
+
+}  // namespace AtomicRingBuffer
 
 #endif  // __MOCKS_H__

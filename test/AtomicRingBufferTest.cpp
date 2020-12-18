@@ -5,6 +5,8 @@
 
 #include "AtomicRingBuffer/AtomicRingBuffer.h"
 
+namespace AtomicRingBuffer {
+
 // Test operation of an uninitialized buffer
 
 TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Size_Capacity) {
@@ -426,3 +428,5 @@ TEST_F(BufferedAtomicBufferFixture, SkipPublish) {
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
   }
 }
+
+}  // namespace AtomicRingBuffer
