@@ -244,3 +244,181 @@ TEST_F(StringCopyHelperFixture, repeatedNewlineEnd) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
 }
+
+TEST_F(StringCopyHelperFixture, oversizedSource_noNewline) {
+  constexpr static const std::size_t charCount = kBufferSize_ + 5;
+  char text[charCount];
+  for (char i = 0; i < charCount; ++i) {
+    text[i] = ('a' + (i % 26));
+  }
+
+  EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, '\n', "\r\n", kBufferSize_, charCount), kBufferSize_);
+
+  for (char i = 0; i < kBufferSize_; ++i) {
+    EXPECT_EQ(text[i], ('a' + (i % 26)));
+  }
+}
+
+TEST_F(StringCopyHelperFixture, oversizedSource_newlineMiddle) {
+  constexpr static const std::size_t charCount = kBufferSize_ + 5;
+  char text[charCount];
+  constexpr static const std::size_t newLineIndex = kBufferSize_ / 2;
+  for (char i = 0; i < charCount; ++i) {
+    if (i == newLineIndex) {
+      text[i] = '\n';
+    } else {
+      text[i] = ('a' + (i % 26));
+    }
+  }
+
+  EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, '\n', "\r\n", kBufferSize_, charCount), kBufferSize_ - 1);
+
+  EXPECT_EQ(dst_, dstBuf_ + kBufferSize_);
+
+  for (char i = 0; i < newLineIndex; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+  EXPECT_EQ(dstBuf_[newLineIndex], '\r');
+  EXPECT_EQ(dstBuf_[newLineIndex + 1], '\n');
+  for (char i = newLineIndex + 2; i < kBufferSize_; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + ((i - 1) % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+}
+
+TEST_F(StringCopyHelperFixture, oversizedSource_newlineBeforeBorder) {
+  // a newline that just fits inside
+  constexpr static const std::size_t charCount = kBufferSize_ + 5;
+  char text[charCount];
+  constexpr static const std::size_t newLineIndex = kBufferSize_ - 2;
+  for (char i = 0; i < charCount; ++i) {
+    if (i == newLineIndex) {
+      text[i] = '\n';
+    } else {
+      text[i] = ('a' + (i % 26));
+    }
+  }
+
+  // Copy everything up to the newline but not the newline itself.
+  EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, '\n', "\r\n", kBufferSize_, charCount), kBufferSize_ - 1);
+
+  EXPECT_EQ(dst_, dstBuf_ + kBufferSize_);
+
+  for (char i = 0; i < newLineIndex; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+  EXPECT_EQ(dstBuf_[newLineIndex], '\r');
+  EXPECT_EQ(dstBuf_[newLineIndex + 1], '\n');
+  for (char i = newLineIndex + 2; i < kBufferSize_; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + ((i - 1) % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+}
+
+TEST_F(StringCopyHelperFixture, oversizedSource_newlinePastBorder) {
+  // a newline that is the next character after the border
+  constexpr static const std::size_t charCount = kBufferSize_ + 5;
+  char text[charCount];
+  constexpr static const std::size_t newLineIndex = kBufferSize_;
+  for (char i = 0; i < charCount; ++i) {
+    if (i == newLineIndex) {
+      text[i] = '\n';
+    } else {
+      text[i] = ('a' + (i % 26));
+    }
+  }
+
+  EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, '\n', "\r\n", kBufferSize_, charCount), kBufferSize_);
+
+  EXPECT_EQ(dst_, dstBuf_ + kBufferSize_);
+
+  for (char i = 0; i < kBufferSize_; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+}
+
+TEST_F(StringCopyHelperFixture, oversizedSource_newlineOnBorder) {
+  // a newline that spans the border
+  constexpr static const std::size_t charCount = kBufferSize_ + 5;
+  char text[charCount];
+  constexpr static const std::size_t newLineIndex = kBufferSize_ - 1;
+  for (char i = 0; i < charCount; ++i) {
+    if (i == newLineIndex) {
+      text[i] = '\n';
+    } else {
+      text[i] = ('a' + (i % 26));
+    }
+  }
+
+  // Copy everything up to the newline but not the newline itself.
+  EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, '\n', "\r\n", kBufferSize_, charCount), kBufferSize_ - 1);
+
+  EXPECT_EQ(dst_, dstBuf_ + kBufferSize_ - 1);
+
+  for (char i = 0; i < kBufferSize_ - 1; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+  EXPECT_EQ(dstBuf_[kBufferSize_ - 1], kInitialValue_);
+}
+
+TEST_F(StringCopyHelperFixture, oversizedSource_MultiNewlineOnBorder) {
+  // Multiple newlines around the border
+  constexpr static const std::size_t charCount = kBufferSize_ + 5;
+  char text[charCount];
+  for (char i = 0; i < charCount; ++i) {
+    text[i] = ('a' + (i % 26));
+  }
+
+  constexpr static const std::size_t newline1 = kBufferSize_ - 2;
+  constexpr static const std::size_t newline2 = kBufferSize_ - 1;
+  constexpr static const std::size_t newline3 = kBufferSize_;
+
+  text[newline1] = '\n';
+  text[newline2] = '\n';
+  text[newline3] = '\n';
+
+  EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, '\n', "\r\n", kBufferSize_, charCount), kBufferSize_ - 1);
+
+  for (char i = 0; i < newline1; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+  EXPECT_EQ(dstBuf_[newline1], '\r');
+  EXPECT_EQ(dstBuf_[newline1 + 1], '\n');
+}
+
+TEST_F(StringCopyHelperFixture, oversizedSource_PushNewlineToBorder) {
+  // a newline early in the string that pushes a newline across the border
+  constexpr static const std::size_t charCount = kBufferSize_ + 5;
+  char text[charCount];
+  for (char i = 0; i < charCount; ++i) {
+    text[i] = ('a' + (i % 26));
+  }
+
+  constexpr static const std::size_t newline1 = kBufferSize_ / 2;
+  constexpr static const std::size_t newline2 = kBufferSize_ - 2;
+
+  // First test: Only the second newline is active
+  text[newline2] = '\n';
+
+  EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, '\n', "\r\n", kBufferSize_, charCount), kBufferSize_ - 1);
+
+  for (char i = 0; i < kBufferSize_ - 2; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+  EXPECT_EQ(dstBuf_[kBufferSize_ - 2], '\r');
+  EXPECT_EQ(dstBuf_[kBufferSize_ - 1], '\n');
+
+  // second test: Both newlines are active.
+  text[newline1] = '\n';
+  memset(dstBuf_, kInitialValue_, kBufferSize_);
+  dst_ = dstBuf_;
+  EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, '\n', "\r\n", kBufferSize_, charCount), kBufferSize_ - 2);
+
+  for (char i = 0; i < newline1; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+  EXPECT_EQ(dstBuf_[newline1], '\r');
+  EXPECT_EQ(dstBuf_[newline1 + 1], '\n');
+  for (char i = newline1 + 2; i < kBufferSize_ - 1; ++i) {
+    EXPECT_EQ(dstBuf_[i], ('a' + ((i - 1) % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
+  }
+  EXPECT_EQ(dstBuf_[kBufferSize_ - 1], kInitialValue_);
+}
