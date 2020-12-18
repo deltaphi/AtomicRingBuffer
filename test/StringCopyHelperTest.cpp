@@ -18,7 +18,6 @@ class StringCopyHelperFixture : public ::testing::Test {
 const std::size_t StringCopyHelperFixture::kBufferSize_;
 const char StringCopyHelperFixture::kInitialValue_;
 
-
 TEST_F(StringCopyHelperFixture, srcNull) {
   EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, nullptr, '\n', "\r\n", kBufferSize_, 25), 0);
   EXPECT_EQ(dst_, dstBuf_);
