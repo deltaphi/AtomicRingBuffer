@@ -134,22 +134,32 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
 TEST_F(BufferedAtomicBufferFixture, FullCircle_WriteBeforeRead) {
   {
     AtomicRingBuffer::pointer_type mem = nullptr;
+
     ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, false), kBufferSize);
     // Push so that the buffer is completely full
+    ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
+
+    // Consume the entire buffer
+    ASSERT_EQ(ringBuffer.consume(mem, kBufferSize), kBufferSize);
+
+    // Fill the buffer again
+    ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, false), kBufferSize);
     ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
   }
 
   {
     AtomicRingBuffer::pointer_type mem = nullptr;
-    // Peek while the writeIdx is lower than the readIdx
-
-    // Case 1: Do not accept a partial result.
-    EXPECT_EQ(ringBuffer.peek(mem, 8, false), 8);
-
-    // Case 2: Accept a partial result.
-    ASSERT_EQ(ringBuffer.peek(mem, 8, true), 8);
-
-    EXPECT_EQ(ringBuffer.consume(mem, 8), 8);
+    
+    // Consume 3 bytes
+    ASSERT_EQ(ringBuffer.peek(mem, 3, true), 3);
+    ASSERT_NE(mem, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem, 3), 3);
+    
+    mem = nullptr;
+    // Consume whatever there is left.
+    ASSERT_EQ(ringBuffer.peek(mem, std::numeric_limits<AtomicRingBuffer::size_type>::max(), true), 7);
+    ASSERT_NE(mem, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem, 7), 7);
   }
 }
 

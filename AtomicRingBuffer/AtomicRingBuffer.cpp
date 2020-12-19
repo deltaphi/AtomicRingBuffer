@@ -93,7 +93,16 @@ AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type allocat
 AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type len, bool partial_acceptable) const {
   data = nullptr;
   size_type readIdx = readIdx_;
-  size_type dataAvailable = writeIdx_ - readIdx;  // TODO: Adjust for write < read here
+  size_type dataAvailable;
+  if (writeIdx_ < readIdx) {
+    // Data available until the end of the buffer
+    dataAvailable = (2 * bufferSize_) - readIdx;
+    if (dataAvailable > bufferSize_) {
+      dataAvailable -= bufferSize_;
+    }
+  } else {
+    dataAvailable = writeIdx_ - readIdx;
+  }
   if (dataAvailable == 0) {
     return 0;
   } else {
