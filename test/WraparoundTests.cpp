@@ -121,11 +121,12 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
       ASSERT_NE(mem, nullptr);
 
       for (int j = 0; j < numBytes; ++j) {
-        EXPECT_EQ(mem[j], j + readData);
+        EXPECT_EQ(mem[j], j + readData) << "Error reading at byte " << static_cast<uint16_t>(readData);
       }
       readData += numBytes;
 
-      ASSERT_EQ(ringBuffer.consume(mem, numBytes), numBytes);
+      ASSERT_EQ(ringBuffer.consume(mem, numBytes), numBytes)
+          << "Error consuming at byte " << static_cast<uint16_t>(readData);
     }
   }
 }
@@ -143,10 +144,10 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_WriteBeforeRead) {
     // Peek while the writeIdx is lower than the readIdx
 
     // Case 1: Do not accept a partial result.
-    EXPECT_EQ(ringBuffer.peek(mem, 8, false), 0);
+    EXPECT_EQ(ringBuffer.peek(mem, 8, false), 8);
 
     // Case 2: Accept a partial result.
-    ASSERT_EQ(ringBuffer.peek(mem, 8, true), 2);
+    ASSERT_EQ(ringBuffer.peek(mem, 8, true), 8);
 
     EXPECT_EQ(ringBuffer.consume(mem, 8), 8);
   }
