@@ -71,7 +71,7 @@ class AtomicRingBuffer {
           bytesAvailable += currentWriteIdx;
         }
       }
-        
+
       return bytesAvailable;
     }
   }

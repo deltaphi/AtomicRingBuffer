@@ -150,19 +150,18 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_WriteBeforeRead) {
     EXPECT_EQ(ringBuffer.size(), 0);
     ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
-
   }
 
   {
     AtomicRingBuffer::pointer_type mem = nullptr;
-    
+
     // Consume 3 bytes
     ASSERT_EQ(ringBuffer.peek(mem, 3, true), 3);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
     ASSERT_NE(mem, nullptr);
     ASSERT_EQ(ringBuffer.consume(mem, 3), 3);
     EXPECT_EQ(ringBuffer.size(), 7);
-    
+
     mem = nullptr;
     // Consume whatever there is left.
     ASSERT_EQ(ringBuffer.peek(mem, std::numeric_limits<AtomicRingBuffer::size_type>::max(), true), 7);
