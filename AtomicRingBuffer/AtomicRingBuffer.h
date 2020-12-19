@@ -55,7 +55,24 @@ class AtomicRingBuffer {
     if (bufferSize_ == 0) {
       return 0;
     } else {
-      return (writeIdx_ - readIdx_) % bufferSize_;
+      size_type bytesAvailable = 0;
+      size_type currentReadIdx = readIdx_;
+      size_type currentWriteIdx = writeIdx_;
+      if (currentWriteIdx >= currentReadIdx) {
+        bytesAvailable = currentWriteIdx - currentReadIdx;
+      } else {
+        bytesAvailable = (2 * bufferSize_ - currentReadIdx);
+        if (bytesAvailable > bufferSize_) {
+          bytesAvailable -= bufferSize_;
+        }
+        if (currentWriteIdx > bufferSize_) {
+          bytesAvailable += currentWriteIdx - bufferSize_;
+        } else {
+          bytesAvailable += currentWriteIdx;
+        }
+      }
+        
+      return bytesAvailable;
     }
   }
 
