@@ -204,7 +204,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_FullPeek) {
   {
     uint8_t* mem = nullptr;
 
-    EXPECT_EQ(ringBuffer.peek(mem, 5, false), 3);
+    EXPECT_EQ(ringBuffer.peek(mem, 5, true), 3);
 
     EXPECT_EQ(buffer, mem);
     EXPECT_EQ(ringBuffer.size(), 3);
@@ -228,6 +228,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_FullPeek) {
 TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_Allocate_FullPeek) {
   {
     uint8_t* mem = nullptr;
+    // Allocate 5 bytes but publish only 3 bytes.
     EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
     EXPECT_EQ(buffer, mem);
     for (uint8_t i = 0; i < 3; ++i) {
@@ -244,6 +245,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_Allocate_FullPeek) 
   }
 
   {
+    // Allocate an additional 5 bytes
     uint8_t* mem = nullptr;
     EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
     EXPECT_EQ(mem, buffer + 5);
@@ -252,8 +254,8 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_Allocate_FullPeek) 
 
   {
     uint8_t* mem = nullptr;
-
-    EXPECT_EQ(ringBuffer.peek(mem, 5, false), 3);
+    // Try to read 5 bytes but get only 3
+    EXPECT_EQ(ringBuffer.peek(mem, 5, true), 3);
 
     EXPECT_EQ(buffer, mem);
     EXPECT_EQ(ringBuffer.size(), 3);
@@ -266,6 +268,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_Allocate_FullPeek) 
       EXPECT_EQ(buffer[i], 0xFF);
     }
 
+    // Try to consume 5 bytes but consume only 3.
     EXPECT_EQ(ringBuffer.consume(mem, 5), 3);
 
     EXPECT_EQ(ringBuffer.size(), 0);
@@ -367,6 +370,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPeek_RepeatedPeek) {
 // test partial consumption
 TEST_F(BufferedAtomicBufferFixture, FullCycle_FullPeek_PartialConsume) {
   {
+    // Write 5 bytes to the buffer
     uint8_t* mem = nullptr;
     EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
     EXPECT_EQ(buffer, mem);
@@ -381,6 +385,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_FullPeek_PartialConsume) {
   }
 
   {
+    // Peek 5 bytes
     uint8_t* mem = nullptr;
     EXPECT_EQ(ringBuffer.peek(mem, 5, false), 5);
 
@@ -395,12 +400,18 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_FullPeek_PartialConsume) {
       EXPECT_EQ(buffer[i], 0xFF);
     }
 
+    // Consume 3 bytes
     EXPECT_EQ(ringBuffer.consume(mem, 3), 3);
     EXPECT_EQ(ringBuffer.size(), 2);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
-    // Peek & Consume the remainder
-    EXPECT_EQ(ringBuffer.peek(mem, 5, false), 2);
+    // Peek & Consume the remainder (2 bytes)
+
+    // Try overpeeking first (won't work)
+    EXPECT_EQ(ringBuffer.peek(mem, 5, false), 0);
+    EXPECT_EQ(mem, nullptr);
+    // Try overpeeking but accepting a partial result
+    EXPECT_EQ(ringBuffer.peek(mem, 5, true), 2);
     EXPECT_EQ(ringBuffer.size(), 2);
 
     EXPECT_EQ(buffer + 3, mem);

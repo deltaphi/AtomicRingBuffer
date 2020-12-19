@@ -91,23 +91,23 @@ AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type allocat
 }
 
 AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type len, bool partial_acceptable) const {
+  data = nullptr;
   size_type readIdx = readIdx_;
   size_type dataAvailable = writeIdx_ - readIdx;  // TODO: Adjust for write < read here
   if (dataAvailable == 0) {
-    data = nullptr;
     return 0;
   } else {
     if (readIdx >= bufferSize_) {
       readIdx -= bufferSize_;
     }
-    data = &buffer_[readIdx];
     if (dataAvailable < len) {
-      // if (partial_acceptable) {
-      len = dataAvailable;  // TODO: Adjust for partial_acceptable == false here
-      //} else {
-      //  return 0;
-      //}
+      if (partial_acceptable) {
+        len = dataAvailable;
+      } else {
+        return 0;
+      }
     }
+    data = &buffer_[readIdx];
     return len;
   }
 }
