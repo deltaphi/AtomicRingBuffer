@@ -101,7 +101,12 @@ AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type
       dataAvailable -= bufferSize_;
     }
   } else {
-    dataAvailable = writeIdx_ - readIdx;
+    if (writeIdx_ >= bufferSize_ && readIdx < bufferSize_) {
+      // Only read up to the wrap-around point
+      dataAvailable = bufferSize_ - readIdx;
+    } else {
+      dataAvailable = writeIdx_ - readIdx;
+    }
   }
   if (dataAvailable == 0) {
     return 0;
