@@ -172,4 +172,45 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_WriteBeforeRead) {
   }
 }
 
+TEST_F(BufferedAtomicBufferFixture, FullCircle_ReadAtFirstWraparound) {
+  {
+    AtomicRingBuffer::pointer_type mem = nullptr;
+
+    ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, false), kBufferSize);
+    EXPECT_EQ(ringBuffer.size(), 0);
+    // Push so that the buffer is completely full
+    ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
+    EXPECT_EQ(ringBuffer.size(), kBufferSize);
+
+    // Consume 3 bytes
+    ASSERT_EQ(ringBuffer.consume(mem, 3), 3);
+    EXPECT_EQ(ringBuffer.size(), 7);
+
+    // Fill the buffer again by publishing another 3 bytes
+    ASSERT_EQ(ringBuffer.allocate(mem, 3, false), 3);
+    EXPECT_EQ(ringBuffer.size(), 7);
+    ASSERT_EQ(ringBuffer.publish(mem, 3), 3);
+    EXPECT_EQ(ringBuffer.size(), kBufferSize);
+  }
+
+  {
+    AtomicRingBuffer::pointer_type mem = nullptr;
+
+    // Consume as much as possible and expect 7 bytes
+    ASSERT_EQ(ringBuffer.peek(mem, std::numeric_limits<AtomicRingBuffer::size_type>::max(), true), 7);
+    EXPECT_EQ(ringBuffer.size(), kBufferSize);
+    ASSERT_NE(mem, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem, 7), 7);
+    EXPECT_EQ(ringBuffer.size(), 3);
+
+    mem = nullptr;
+    // Consume whatever there is left.
+    ASSERT_EQ(ringBuffer.peek(mem, std::numeric_limits<AtomicRingBuffer::size_type>::max(), true), 3);
+    EXPECT_EQ(ringBuffer.size(), 3);
+    ASSERT_NE(mem, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem, 3), 3);
+    EXPECT_EQ(ringBuffer.size(), 0);
+  }
+}
+
 }  // namespace AtomicRingBuffer
