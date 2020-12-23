@@ -228,7 +228,11 @@ TEST_F(BufferedAtomicBufferFixture, MassiveData) {
 
   AtomicRingBuffer::pointer_type mem = nullptr;
   ASSERT_EQ(ringBuffer.allocate(mem, strlen(loremIpsum), true), 10);
-  EXPECT_EQ(ringBuffer.allocate(mem, strlen(loremIpsum), true), 0);
+
+  {
+    AtomicRingBuffer::pointer_type mem2 = nullptr;
+    EXPECT_EQ(ringBuffer.allocate(mem2, strlen(loremIpsum), true), 0);
+  }
 
   memcpy(mem, loremIpsum, 10);
 

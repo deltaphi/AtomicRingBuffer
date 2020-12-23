@@ -6,18 +6,51 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
                                                        bool partial_acceptable) {
   memory = nullptr;
 
-  // Load expected start of writable area
-  size_type currentAllocateIdx = allocateIdx_.load();
-
-  // Find out whether end of buffer area or readIdx is ahead
   size_type availableBytes;
-  if (readIdx_ <= currentAllocateIdx) {
-    availableBytes = (2 * bufferSize_) - currentAllocateIdx;
-  } else {
-    availableBytes = readIdx_ - currentAllocateIdx;
+  size_type origAllocateIdx = allocateIdx_;
+  {
+    // Load start of unallocated area
+    size_type currentReadIdx = readIdx_;
+    size_type currentAllocateIdx = origAllocateIdx;
+
+    if (currentAllocateIdx < bufferSize_) {
+      // Allocating on the lower index segment
+      availableBytes = bufferSize_ - currentAllocateIdx;
+
+      if (currentReadIdx != currentAllocateIdx) {
+        if (currentReadIdx >= bufferSize_) {
+          // Wrap currentReadIdx to the right area.
+          currentReadIdx -= bufferSize_;
+        }
+
+        if (currentAllocateIdx <= currentReadIdx && currentReadIdx < bufferSize_) {
+          // ReadIdx points between allocateIdx and end of buffer
+          availableBytes -= bufferSize_ - currentReadIdx;
+        }
+      }
+    } else {
+      // Allocating in the upper index segment
+      availableBytes = (2 * bufferSize_) - currentAllocateIdx;
+
+      if (currentReadIdx != currentAllocateIdx) {
+        if (currentReadIdx < bufferSize_) {
+          // Push currentReadIdx to same index segment
+          currentReadIdx += bufferSize_;
+        }
+        if (currentAllocateIdx <= currentReadIdx && currentReadIdx < (2*bufferSize_)) {
+          // ReadIdx points between allocateIdx and end of buffer
+          availableBytes -= (2 * bufferSize_) - currentReadIdx;
+        }
+      }
+    }
+
+    // Space in the buffer exists:
+    // * Between allocateIdx_ and bufferSize_
+    // * Unless readIdx_ points into that area.
+    //   This pointing may be direct or by wrap-around!
   }
-  if (availableBytes > bufferSize_) {
-    availableBytes -= bufferSize_;
+  if (availableBytes == 0) {
+    return 0;
   }
 
   if (numElems > availableBytes) {
@@ -29,16 +62,16 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
     }
   }
 
-  size_type newAllocateIdx = currentAllocateIdx + numElems;
+  size_type newAllocateIdx = origAllocateIdx + numElems;
   if (newAllocateIdx >= (2 * bufferSize_)) {
     newAllocateIdx -= 2 * bufferSize_;
   }
 
-  if (allocateIdx_.compare_exchange_strong(currentAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
-    if (currentAllocateIdx >= bufferSize_) {
-      currentAllocateIdx -= bufferSize_;
+  if (allocateIdx_.compare_exchange_strong(origAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
+    if (origAllocateIdx >= bufferSize_) {
+      origAllocateIdx -= bufferSize_;
     }
-    memory = &buffer_[currentAllocateIdx];
+    memory = &buffer_[origAllocateIdx];
     return numElems;
   } else {
     return 0;
