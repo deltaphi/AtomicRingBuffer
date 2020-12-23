@@ -213,4 +213,27 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ReadAtFirstWraparound) {
   }
 }
 
+TEST_F(BufferedAtomicBufferFixture, MassiveData) {
+  const char* loremIpsum =
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis at dolor id nisl viverra luctus eget vitae "
+      "libero. Donec ultricies, ex ac rhoncus mollis, mi ex tempus nibh, quis rutrum nulla magna id eros. Aliquam erat "
+      "volutpat. Nunc in dapibus est, non sagittis arcu. Cras vitae libero non felis tempus posuere nec nec lectus. "
+      "Cras quam quam, condimentum ut leo eget, pellentesque venenatis metus. Praesent eget hendrerit enim. Duis "
+      "pharetra sapien id turpis facilisis vehicula. Aenean mollis, ex id porta sollicitudin, lorem enim interdum "
+      "nisi, quis fringilla mi nisl in nunc. Praesent mauris neque, tempor at justo quis, facilisis sodales est. Nunc "
+      "a enim id leo tincidunt varius sit amet in sem. Sed aliquet tristique sem quis sodales. Nullam pellentesque "
+      "purus a odio tristique venenatis.";
+
+  EXPECT_EQ(ringBuffer.capacity(), 10);
+
+  AtomicRingBuffer::pointer_type mem = nullptr;
+  ASSERT_EQ(ringBuffer.allocate(mem, strlen(loremIpsum), true), 10);
+  EXPECT_EQ(ringBuffer.allocate(mem, strlen(loremIpsum), true), 0);
+
+  memcpy(mem, loremIpsum, 10);
+
+  EXPECT_EQ(ringBuffer.publish(mem, 10), 10);
+  EXPECT_EQ(ringBuffer.allocate(mem, strlen(loremIpsum), true), 0);
+}
+
 }  // namespace AtomicRingBuffer
