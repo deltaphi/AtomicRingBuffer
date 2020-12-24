@@ -37,7 +37,7 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
           // Push currentReadIdx to same index segment
           currentReadIdx += bufferSize_;
         }
-        if (currentAllocateIdx <= currentReadIdx && currentReadIdx < (2*bufferSize_)) {
+        if (currentAllocateIdx <= currentReadIdx && currentReadIdx < (2 * bufferSize_)) {
           // ReadIdx points between allocateIdx and end of buffer
           availableBytes -= (2 * bufferSize_) - currentReadIdx;
         }
