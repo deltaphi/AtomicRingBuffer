@@ -133,7 +133,6 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
       ASSERT_EQ(ringBuffer.consume(mem, numBytes), numBytes)
           << "Error consuming at byte " << static_cast<uint16_t>(readData);
       EXPECT_EQ(ringBuffer.size(), sendData - readData);
-
     }
   }
 }
