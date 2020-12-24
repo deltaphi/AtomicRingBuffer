@@ -287,13 +287,13 @@ TEST_F(StringCopyHelperFixture, oversizedSource_noNewline) {
   char text[charCount];
   const char* replacePtr = replace;
 
-  for (char i = 0; i < charCount; ++i) {
+  for (std::size_t i = 0; i < charCount; ++i) {
     text[i] = ('a' + (i % 26));
   }
 
   EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, search, replacePtr, kBufferSize_, charCount), kBufferSize_);
 
-  for (char i = 0; i < kBufferSize_; ++i) {
+  for (std::size_t i = 0; i < kBufferSize_; ++i) {
     EXPECT_EQ(text[i], ('a' + (i % 26)));
   }
   EXPECT_EQ(replacePtr, replace);
@@ -305,7 +305,7 @@ TEST_F(StringCopyHelperFixture, oversizedSource_newlineMiddle) {
   const char* replacePtr = replace;
 
   constexpr static const std::size_t newLineIndex = kBufferSize_ / 2;
-  for (char i = 0; i < charCount; ++i) {
+  for (std::size_t i = 0; i < charCount; ++i) {
     if (i == newLineIndex) {
       text[i] = search;
     } else {
@@ -318,12 +318,12 @@ TEST_F(StringCopyHelperFixture, oversizedSource_newlineMiddle) {
 
   EXPECT_EQ(dst_, dstBuf_ + kBufferSize_);
 
-  for (char i = 0; i < newLineIndex; ++i) {
+  for (std::size_t i = 0; i < newLineIndex; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(dstBuf_[newLineIndex], '\r');
   EXPECT_EQ(dstBuf_[newLineIndex + 1], search);
-  for (char i = newLineIndex + 2; i < kBufferSize_; ++i) {
+  for (std::size_t i = newLineIndex + 2; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + ((i - 1) % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(replacePtr, replace);
@@ -336,7 +336,7 @@ TEST_F(StringCopyHelperFixture, oversizedSource_newlineBeforeBorder) {
   const char* replacePtr = replace;
 
   constexpr static const std::size_t newLineIndex = kBufferSize_ - 2;
-  for (char i = 0; i < charCount; ++i) {
+  for (std::size_t i = 0; i < charCount; ++i) {
     if (i == newLineIndex) {
       text[i] = search;
     } else {
@@ -350,12 +350,12 @@ TEST_F(StringCopyHelperFixture, oversizedSource_newlineBeforeBorder) {
 
   EXPECT_EQ(dst_, dstBuf_ + kBufferSize_);
 
-  for (char i = 0; i < newLineIndex; ++i) {
+  for (std::size_t i = 0; i < newLineIndex; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(dstBuf_[newLineIndex], '\r');
   EXPECT_EQ(dstBuf_[newLineIndex + 1], search);
-  for (char i = newLineIndex + 2; i < kBufferSize_; ++i) {
+  for (std::size_t i = newLineIndex + 2; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + ((i - 1) % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(replacePtr, replace);
@@ -367,20 +367,18 @@ TEST_F(StringCopyHelperFixture, oversizedSource_newlinePastBorder) {
   char text[charCount];
   const char* replacePtr = replace;
 
-  constexpr static const std::size_t newLineIndex = kBufferSize_;
-  for (char i = 0; i < charCount; ++i) {
-    if (i == newLineIndex) {
-      text[i] = search;
-    } else {
-      text[i] = ('a' + (i % 26));
-    }
+  constexpr static const std::size_t newLineIndex = charCount - 1;
+  for (std::size_t i = 0; i < charCount; ++i) {
+    text[i] = ('a' + (i % 26));
   }
+
+  text[newLineIndex] = search;
 
   EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, search, replacePtr, kBufferSize_, charCount), kBufferSize_);
 
   EXPECT_EQ(dst_, dstBuf_ + kBufferSize_);
 
-  for (char i = 0; i < kBufferSize_; ++i) {
+  for (std::size_t i = 0; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(replacePtr, replace);
@@ -393,7 +391,7 @@ TEST_F(StringCopyHelperFixture, oversizedSource_newlineOnBorder) {
   const char* replacePtr = replace;
 
   constexpr static const std::size_t newLineIndex = kBufferSize_ - 1;
-  for (char i = 0; i < charCount; ++i) {
+  for (std::size_t i = 0; i < charCount; ++i) {
     if (i == newLineIndex) {
       text[i] = search;
     } else {
@@ -406,7 +404,7 @@ TEST_F(StringCopyHelperFixture, oversizedSource_newlineOnBorder) {
 
   EXPECT_EQ(dst_, dstBuf_ + kBufferSize_);
 
-  for (char i = 0; i < kBufferSize_ - 1; ++i) {
+  for (std::size_t i = 0; i < kBufferSize_ - 1; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(dstBuf_[kBufferSize_ - 1], replace[0]);
@@ -419,7 +417,7 @@ TEST_F(StringCopyHelperFixture, oversizedSource_MultiNewlineOnBorder) {
   char text[charCount];
   const char* replacePtr = replace;
 
-  for (char i = 0; i < charCount; ++i) {
+  for (std::size_t i = 0; i < charCount; ++i) {
     text[i] = ('a' + (i % 26));
   }
 
@@ -434,7 +432,7 @@ TEST_F(StringCopyHelperFixture, oversizedSource_MultiNewlineOnBorder) {
   EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, search, replacePtr, kBufferSize_, charCount),
             kBufferSize_ - 1);
 
-  for (char i = 0; i < newline1; ++i) {
+  for (std::size_t i = 0; i < newline1; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(dstBuf_[newline1], '\r');
@@ -448,7 +446,7 @@ TEST_F(StringCopyHelperFixture, oversizedSource_PushNewlineToBorder) {
   char text[charCount];
   const char* replacePtr = replace;
 
-  for (char i = 0; i < charCount; ++i) {
+  for (std::size_t i = 0; i < charCount; ++i) {
     text[i] = ('a' + (i % 26));
   }
 
@@ -461,7 +459,7 @@ TEST_F(StringCopyHelperFixture, oversizedSource_PushNewlineToBorder) {
   EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, search, replacePtr, kBufferSize_, charCount),
             kBufferSize_ - 1);
 
-  for (char i = 0; i < kBufferSize_ - 2; ++i) {
+  for (std::size_t i = 0; i < kBufferSize_ - 2; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(dstBuf_[kBufferSize_ - 2], '\r');
@@ -478,12 +476,12 @@ TEST_F(StringCopyHelperFixture, oversizedSource_PushNewlineToBorder) {
   EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, search, replacePtr, kBufferSize_, charCount),
             kBufferSize_ - 1);
 
-  for (char i = 0; i < newline1; ++i) {
+  for (std::size_t i = 0; i < newline1; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + (i % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(dstBuf_[newline1], '\r');
   EXPECT_EQ(dstBuf_[newline1 + 1], search);
-  for (char i = newline1 + 2; i < kBufferSize_ - 1; ++i) {
+  for (std::size_t i = newline1 + 2; i < kBufferSize_ - 1; ++i) {
     EXPECT_EQ(dstBuf_[i], ('a' + ((i - 1) % 26))) << "i: " << std::dec << static_cast<int16_t>(i);
   }
   EXPECT_EQ(dstBuf_[kBufferSize_ - 1], replace[0]);
