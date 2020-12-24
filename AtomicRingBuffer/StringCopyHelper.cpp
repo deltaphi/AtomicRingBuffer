@@ -46,21 +46,23 @@ size_t memcpyCharReplace(char*& dest, const char* src, char search, const char*&
     // If search was found, insert replace.
     if (nextSearchOccurence != nullptr) {
       std::size_t bytesRemainingInBuffer = destLen - writeIdx;
-      std::size_t bytesToInsert = std::min(replaceLen, bytesRemainingInBuffer);
+      if (bytesRemainingInBuffer > 0) {
+        std::size_t bytesToInsert = std::min(replaceLen, bytesRemainingInBuffer);
 
-      memcpy(&dest[writeIdx], replace, bytesToInsert);
+        memcpy(&dest[writeIdx], replace, bytesToInsert);
 
-      writeIdx += bytesToInsert;
+        writeIdx += bytesToInsert;
 
-      bool resultPartiallyWritten = bytesToInsert != replaceLen;
-      if (resultPartiallyWritten) {
-        // Advance replace to the next unwritten byte
-        replace = &replace[bytesToInsert];
+        bool resultPartiallyWritten = bytesToInsert != replaceLen;
+        if (resultPartiallyWritten) {
+          // Advance replace to the next unwritten byte
+          replace = &replace[bytesToInsert];
+        }
+
+        // Then continue with the source byte afterwards.
+        ++readIdx;
+        ++nextSearchOccurence;
       }
-
-      // Then continue with the source byte afterwards.
-      ++readIdx;
-      ++nextSearchOccurence;
     }
   }
 
