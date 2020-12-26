@@ -2,53 +2,26 @@
 
 namespace AtomicRingBuffer {
 
+AtomicRingBuffer::size_type AtomicRingBuffer::bytesTillPointerOrBufferEnd(const size_type lower,
+                                                                          const size_type upper) const {
+  size_type bytesAvailable = bytesToSectionEnd(lower);
+  size_type upperBytesAvailable = bytesToSectionEnd(upper);
+  if (upperBytesAvailable < bytesAvailable) {
+    bytesAvailable -= upperBytesAvailable;
+  } else if (upperBytesAvailable == bytesAvailable && !sameSection(lower, upper)) {
+    bytesAvailable -= upperBytesAvailable;
+  }
+  return bytesAvailable;
+}
+
 AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, size_type numElems,
                                                        bool partial_acceptable) {
   memory = nullptr;
 
-  size_type availableBytes;
   size_type origAllocateIdx = allocateIdx_;
-  {
-    // Load start of unallocated area
-    size_type currentReadIdx = readIdx_;
-    size_type currentAllocateIdx = origAllocateIdx;
 
-    if (currentAllocateIdx < bufferSize_) {
-      // Allocating on the lower index segment
-      availableBytes = bufferSize_ - currentAllocateIdx;
+  size_type availableBytes = bytesTillPointerOrBufferEnd(origAllocateIdx, readIdx_);
 
-      if (currentReadIdx != currentAllocateIdx) {
-        if (currentReadIdx >= bufferSize_) {
-          // Wrap currentReadIdx to the right area.
-          currentReadIdx -= bufferSize_;
-        }
-
-        if (currentAllocateIdx <= currentReadIdx && currentReadIdx < bufferSize_) {
-          // ReadIdx points between allocateIdx and end of buffer
-          availableBytes -= bufferSize_ - currentReadIdx;
-        }
-      }
-    } else {
-      // Allocating in the upper index segment
-      availableBytes = (2 * bufferSize_) - currentAllocateIdx;
-
-      if (currentReadIdx != currentAllocateIdx) {
-        if (currentReadIdx < bufferSize_) {
-          // Push currentReadIdx to same index segment
-          currentReadIdx += bufferSize_;
-        }
-        if (currentAllocateIdx <= currentReadIdx && currentReadIdx < (2 * bufferSize_)) {
-          // ReadIdx points between allocateIdx and end of buffer
-          availableBytes -= (2 * bufferSize_) - currentReadIdx;
-        }
-      }
-    }
-
-    // Space in the buffer exists:
-    // * Between allocateIdx_ and bufferSize_
-    // * Unless readIdx_ points into that area.
-    //   This pointing may be direct or by wrap-around!
-  }
   if (availableBytes == 0) {
     return 0;
   }

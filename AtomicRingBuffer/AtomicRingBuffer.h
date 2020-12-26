@@ -89,6 +89,36 @@ class AtomicRingBuffer {
   }
 
  private:
+  constexpr pointer_type begin() { return buffer_; }
+  constexpr pointer_type end() { return buffer_ + endIdx(); }
+  constexpr const pointer_type begin() const { return buffer_; }
+  constexpr const pointer_type end() const { return buffer_ + endIdx(); }
+  constexpr pointer_type upperSectionEnd() const { return buffer_ + upperSectionEndIdx(); }
+
+  constexpr size_type beginIdx() const { return 0; }
+  constexpr size_type endIdx() const { return bufferSize_; }
+  constexpr size_type upperSectionEndIdx() const { return 2 * bufferSize_; }
+
+  size_type bytesTillPointerOrBufferEnd(const size_type lower, const size_type upper) const;
+  constexpr size_type bytesToSectionEnd(const size_type ptr) const {
+    if (pointsToUpperSection(ptr)) {
+      return upperSectionEndIdx() - ptr;
+    } else {
+      return endIdx() - ptr;
+    }
+  }
+
+  /**
+   * \brief Whether a pointer points to the lower or the upper round of the buffer
+   *
+   * \returns FALSE for lower round, TRUE for upper round.
+   */
+  constexpr bool pointsToUpperSection(const size_type ptr) const { return ptr >= endIdx(); }
+
+  constexpr bool sameSection(const size_type lower, const size_type upper) const {
+    return pointsToUpperSection(lower) == pointsToUpperSection(upper);
+  }
+
   pointer_type buffer_;
   size_type bufferSize_;
 
