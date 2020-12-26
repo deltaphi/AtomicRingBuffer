@@ -7,6 +7,18 @@
 
 namespace AtomicRingBuffer {
 
+/**
+ * \brief Manages a round-robin buffer of bytes.
+ *
+ * Bytes must be allocated, can then be written to and must then be published. Bytes that have been published must be
+ * peeked to be read and must finally be consumed to free up buffer space.
+ *
+ * Special implementation notes:
+ * * The index range is twice as large as the actual buffer. This lets indices carry information whether the buffer is
+ *   full or empty.
+ * * Class invariant: When adjusting for the circular nature of the index range (2*bufferSize_), it holds that:
+ *   readIdx <= writeIdx <= allocateIdx.
+ */
 class AtomicRingBuffer {
  public:
   using value_type = uint8_t;
@@ -88,7 +100,7 @@ class AtomicRingBuffer {
 
   // From where can be read
   atomic_size_type readIdx_;
-};
+};  // namespace AtomicRingBuffer
 
 }  // namespace AtomicRingBuffer
 
