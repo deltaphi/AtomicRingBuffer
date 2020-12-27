@@ -2,13 +2,15 @@
 
 namespace AtomicRingBuffer {
 
-AtomicRingBuffer::size_type AtomicRingBuffer::bytesTillPointerOrBufferEnd(const size_type lower,
-                                                                          const size_type upper) const {
+AtomicRingBuffer::size_type AtomicRingBuffer::bytesTillPointerOrBufferEnd(const size_type lower, const size_type upper,
+                                                                          bool isInside) const {
   size_type bytesAvailable = bytesToSectionEnd(lower);
   size_type upperBytesAvailable = bytesToSectionEnd(upper);
   if (upperBytesAvailable < bytesAvailable) {
     bytesAvailable -= upperBytesAvailable;
-  } else if (upperBytesAvailable == bytesAvailable && !sameSection(lower, upper)) {
+  } else if (!isInside && upperBytesAvailable == bytesAvailable && !sameSection(lower, upper)) {
+    bytesAvailable -= upperBytesAvailable;
+  } else if (isInside && lower == upper) {
     bytesAvailable -= upperBytesAvailable;
   }
   return bytesAvailable;
@@ -20,7 +22,7 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
 
   size_type origAllocateIdx = allocateIdx_;
 
-  size_type availableBytes = bytesTillPointerOrBufferEnd(origAllocateIdx, readIdx_);
+  size_type availableBytes = bytesTillPointerOrBufferEnd_outside(origAllocateIdx, readIdx_);
 
   if (availableBytes == 0) {
     return 0;
@@ -99,21 +101,8 @@ AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type allocat
 AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type len, bool partial_acceptable) const {
   data = nullptr;
   size_type readIdx = readIdx_;
-  size_type dataAvailable;
-  if (writeIdx_ < readIdx) {
-    // Data available until the end of the buffer
-    dataAvailable = (2 * bufferSize_) - readIdx;
-    if (dataAvailable > bufferSize_) {
-      dataAvailable -= bufferSize_;
-    }
-  } else {
-    if (writeIdx_ >= bufferSize_ && readIdx < bufferSize_) {
-      // Only read up to the wrap-around point
-      dataAvailable = bufferSize_ - readIdx;
-    } else {
-      dataAvailable = writeIdx_ - readIdx;
-    }
-  }
+  size_type dataAvailable = bytesTillPointerOrBufferEnd_inside(readIdx, writeIdx_);
+
   if (dataAvailable == 0) {
     return 0;
   } else {

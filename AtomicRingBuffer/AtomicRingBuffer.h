@@ -99,7 +99,13 @@ class AtomicRingBuffer {
   constexpr size_type endIdx() const { return bufferSize_; }
   constexpr size_type upperSectionEndIdx() const { return 2 * bufferSize_; }
 
-  size_type bytesTillPointerOrBufferEnd(const size_type lower, const size_type upper) const;
+  size_type bytesTillPointerOrBufferEnd(const size_type lower, const size_type upper, bool isInside) const;
+  size_type bytesTillPointerOrBufferEnd_outside(const size_type lower, const size_type upper) const {
+    return bytesTillPointerOrBufferEnd(lower, upper, false);
+  }
+  size_type bytesTillPointerOrBufferEnd_inside(const size_type lower, const size_type upper) const {
+    return bytesTillPointerOrBufferEnd(lower, upper, true);
+  }
   constexpr size_type bytesToSectionEnd(const size_type ptr) const {
     if (pointsToUpperSection(ptr)) {
       return upperSectionEndIdx() - ptr;
