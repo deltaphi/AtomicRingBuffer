@@ -73,13 +73,8 @@ class AtomicRingBuffer {
     if (currentWriteIdx >= currentReadIdx) {
       bytesAvailable = currentWriteIdx - currentReadIdx;
     } else {
-      bytesAvailable = (2 * bufferSize_ - currentReadIdx);
-      bytesAvailable = wrapToBufferSize(bytesAvailable);
-      if (currentWriteIdx > bufferSize_) {
-        bytesAvailable += currentWriteIdx - bufferSize_;
-      } else {
-        bytesAvailable += currentWriteIdx;
-      }
+      bytesAvailable = bytesRemainingInBuffer(currentReadIdx);
+      bytesAvailable += wrapToBufferSize(currentWriteIdx);
     }
 
     return bytesAvailable;
