@@ -111,7 +111,7 @@ class AtomicRingBuffer {
     }
     return idx;
   }
-  constexpr size_type wrapToDoubleBufferIdx(size_type & idx) const {
+  constexpr size_type wrapToDoubleBufferIdx(size_type idx) const {
     if (idx >= (2 * bufferSize_)) {
       idx -= 2 * bufferSize_;
     }
