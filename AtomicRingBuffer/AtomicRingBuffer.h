@@ -49,7 +49,7 @@ class AtomicRingBuffer {
    * Sends of allocated bytes. Can send parts of an allocaton but cannot send
    * out-of-order. Cannot send bytes wrapping around the buffer.
    */
-  size_type publish(const pointer_type allocationStart, size_type numElems);
+  size_type publish(const pointer_type data, size_type len) { return commit(writeIdx_, allocateIdx_, data, len); }
 
   /**
    * Returns pointer and length to available data.
@@ -59,7 +59,7 @@ class AtomicRingBuffer {
   /**
    * Free up space in the buffer.
    */
-  size_type consume(const pointer_type data, size_type len);
+  size_type consume(const pointer_type data, size_type len) { return commit(readIdx_, writeIdx_, data, len); }
 
   size_type capacity() const { return bufferSize_; }
 
@@ -132,6 +132,9 @@ class AtomicRingBuffer {
       return endIdx() - ptr;
     }
   }
+
+  size_type commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd, const pointer_type data,
+                   size_type len);
 
   /**
    * \brief Whether a pointer points to the lower or the upper round of the buffer

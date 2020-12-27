@@ -46,26 +46,27 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
   }
 }
 
-AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type data, size_type numElems) {
+AtomicRingBuffer::size_type AtomicRingBuffer::commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd,
+                                                     const pointer_type data, size_type len) {
   if (buffer_ <= data && data <= &buffer_[bufferSize_ - 1]) {
     // Check whether there was actually memory allocated that is now being published.
     size_type requestedIndex = (data - buffer_);
-    size_type currentWriteIdx = writeIdx_;
+    size_type currentWriteIdx = sectionBegin;
     if (requestedIndex != wrapToBufferIdx(currentWriteIdx)) {
       // Out-of-order commit
       return 0;
     }
 
-    size_type numElemsPublishable = bytesTillPointerOrBufferEnd_inside(currentWriteIdx, allocateIdx_);
-    if (numElems > numElemsPublishable) {
-      numElems = numElemsPublishable;
+    size_type numCommitableElems = bytesTillPointerOrBufferEnd_inside(currentWriteIdx, sectionEnd);
+    if (len > numCommitableElems) {
+      len = numCommitableElems;
     }
-    size_type newIdx = currentWriteIdx + numElems;
+    size_type newIdx = currentWriteIdx + len;
     newIdx = wrapToDoubleBufferIdx(newIdx);
 
     // Check if the memory to be published was previously allocated.
-    if (writeIdx_.compare_exchange_strong(currentWriteIdx, newIdx, std::memory_order_acq_rel)) {
-      return numElems;
+    if (sectionBegin.compare_exchange_strong(currentWriteIdx, newIdx, std::memory_order_acq_rel)) {
+      return len;
     } else {
       return 0;
     }
@@ -92,31 +93,6 @@ AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type
     }
     data = &buffer_[readIdx];
     return len;
-  }
-}
-
-AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type data, size_type len) {
-  if (buffer_ <= data && data <= &buffer_[bufferSize_ - 1]) {
-    size_type requestedIdx = data - buffer_;
-    size_type currentReadIdx = readIdx_;
-    if (requestedIdx != wrapToBufferIdx(currentReadIdx)) {
-      // Check for out-of-order consume
-      return 0;
-    }
-    size_type numElemsFreeable = bytesTillPointerOrBufferEnd_inside(currentReadIdx, writeIdx_);
-    if (len > numElemsFreeable) {
-      len = numElemsFreeable;
-    }
-    size_type newReadIdx = currentReadIdx + len;
-    newReadIdx = wrapToDoubleBufferIdx(newReadIdx);
-    if (readIdx_.compare_exchange_strong(currentReadIdx, newReadIdx, std::memory_order_acq_rel)) {
-      return len;
-    } else {
-      return 0;
-    }
-
-  } else {
-    return 0;
   }
 }
 
