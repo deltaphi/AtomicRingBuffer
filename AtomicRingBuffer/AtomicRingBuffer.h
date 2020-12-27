@@ -54,7 +54,9 @@ class AtomicRingBuffer {
   /**
    * Returns pointer and length to available data.
    */
-  size_type peek(pointer_type &data, size_type len, bool partial_acceptable) const;
+  size_type peek(pointer_type &data, size_type len, bool partial_acceptable) const {
+    return allocate(readIdx_, writeIdx_, true, data, len, partial_acceptable);
+  }
 
   /**
    * Free up space in the buffer.
@@ -89,12 +91,6 @@ class AtomicRingBuffer {
   }
 
  private:
-  constexpr pointer_type begin() { return buffer_; }
-  constexpr pointer_type end() { return buffer_ + endIdx(); }
-  constexpr const pointer_type begin() const { return buffer_; }
-  constexpr const pointer_type end() const { return buffer_ + endIdx(); }
-  constexpr pointer_type upperSectionEnd() const { return buffer_ + upperSectionEndIdx(); }
-
   constexpr size_type beginIdx() const { return 0; }
   constexpr size_type endIdx() const { return bufferSize_; }
   constexpr size_type upperSectionEndIdx() const { return 2 * bufferSize_; }
@@ -118,13 +114,11 @@ class AtomicRingBuffer {
     return idx;
   }
 
-  size_type bytesTillPointerOrBufferEnd(const size_type lower, const size_type upper, bool isInside) const;
-  size_type bytesTillPointerOrBufferEnd_outside(const size_type lower, const size_type upper) const {
-    return bytesTillPointerOrBufferEnd(lower, upper, false);
+  size_type bytesToPointerOrBufferEnd(const size_type lower, const size_type upper, bool isInside) const;
+  size_type bytesToPointerOrBufferEnd_inside(const size_type lower, const size_type upper) const {
+    return bytesToPointerOrBufferEnd(lower, upper, true);
   }
-  size_type bytesTillPointerOrBufferEnd_inside(const size_type lower, const size_type upper) const {
-    return bytesTillPointerOrBufferEnd(lower, upper, true);
-  }
+
   constexpr size_type bytesToSectionEnd(const size_type ptr) const {
     if (pointsToUpperSection(ptr)) {
       return upperSectionEndIdx() - ptr;
@@ -133,6 +127,8 @@ class AtomicRingBuffer {
     }
   }
 
+  size_type allocate(size_type sectionBegin, size_type sectionEnd, bool isInside, pointer_type &data, size_type len,
+                     bool partial_acceptable) const;
   size_type commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd, const pointer_type data,
                    size_type len);
 
@@ -158,7 +154,7 @@ class AtomicRingBuffer {
 
   // From where can be read
   atomic_size_type readIdx_;
-};  // namespace AtomicRingBuffer
+};
 
 }  // namespace AtomicRingBuffer
 

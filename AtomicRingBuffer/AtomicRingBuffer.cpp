@@ -2,8 +2,8 @@
 
 namespace AtomicRingBuffer {
 
-AtomicRingBuffer::size_type AtomicRingBuffer::bytesTillPointerOrBufferEnd(const size_type lower, const size_type upper,
-                                                                          bool isInside) const {
+AtomicRingBuffer::size_type AtomicRingBuffer::bytesToPointerOrBufferEnd(const size_type lower, const size_type upper,
+                                                                        bool isInside) const {
   size_type bytesAvailable = bytesToSectionEnd(lower);
   size_type upperBytesAvailable = bytesToSectionEnd(upper);
   if (upperBytesAvailable < bytesAvailable) {
@@ -16,31 +16,17 @@ AtomicRingBuffer::size_type AtomicRingBuffer::bytesTillPointerOrBufferEnd(const 
   return bytesAvailable;
 }
 
-AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, size_type numElems,
-                                                       bool partial_acceptable) {
-  memory = nullptr;
-
+AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &data, size_type len, bool partial_acceptable) {
   size_type origAllocateIdx = allocateIdx_;
+  size_type allocatedBytes = allocate(origAllocateIdx, readIdx_, false, data, len, partial_acceptable);
 
-  size_type availableBytes = bytesTillPointerOrBufferEnd_outside(origAllocateIdx, readIdx_);
-
-  if (numElems > availableBytes) {
-    // Not as much space available as requested
-    if (partial_acceptable) {
-      numElems = availableBytes;
-    } else {
-      return 0;
-    }
-  }
-
-  size_type newAllocateIdx = origAllocateIdx + numElems;
+  size_type newAllocateIdx = origAllocateIdx + allocatedBytes;
   newAllocateIdx = wrapToDoubleBufferIdx(newAllocateIdx);
 
   if (newAllocateIdx != origAllocateIdx &&
       allocateIdx_.compare_exchange_strong(origAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
     origAllocateIdx = wrapToBufferIdx(origAllocateIdx);
-    memory = &buffer_[origAllocateIdx];
-    return numElems;
+    return allocatedBytes;
   } else {
     return 0;
   }
@@ -57,7 +43,7 @@ AtomicRingBuffer::size_type AtomicRingBuffer::commit(atomic_size_type &sectionBe
       return 0;
     }
 
-    size_type numCommitableElems = bytesTillPointerOrBufferEnd_inside(currentWriteIdx, sectionEnd);
+    size_type numCommitableElems = bytesToPointerOrBufferEnd_inside(currentWriteIdx, sectionEnd);
     if (len > numCommitableElems) {
       len = numCommitableElems;
     }
@@ -75,15 +61,16 @@ AtomicRingBuffer::size_type AtomicRingBuffer::commit(atomic_size_type &sectionBe
   }
 }
 
-AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type len, bool partial_acceptable) const {
+AtomicRingBuffer::size_type AtomicRingBuffer::allocate(size_type sectionBegin, size_type sectionEnd, bool isInside,
+                                                       pointer_type &data, size_type len,
+                                                       bool partial_acceptable) const {
   data = nullptr;
-  size_type readIdx = readIdx_;
-  size_type dataAvailable = bytesTillPointerOrBufferEnd_inside(readIdx, writeIdx_);
+  size_type dataAvailable = bytesToPointerOrBufferEnd(sectionBegin, sectionEnd, isInside);
 
   if (dataAvailable == 0) {
     return 0;
   } else {
-    readIdx = wrapToBufferIdx(readIdx);
+    size_type dataStartIdx = wrapToBufferIdx(sectionBegin);
     if (dataAvailable < len) {
       if (partial_acceptable) {
         len = dataAvailable;
@@ -91,7 +78,7 @@ AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type
         return 0;
       }
     }
-    data = &buffer_[readIdx];
+    data = &buffer_[dataStartIdx];
     return len;
   }
 }
