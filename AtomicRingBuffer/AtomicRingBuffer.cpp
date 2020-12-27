@@ -46,37 +46,26 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
   }
 }
 
-AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type allocationStart, size_type numElems) {
-  if (buffer_ <= allocationStart && allocationStart <= &buffer_[bufferSize_ - 1]) {
+AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type data, size_type numElems) {
+  if (buffer_ <= data && data <= &buffer_[bufferSize_ - 1]) {
     // Check whether there was actually memory allocated that is now being published.
-    size_type oldIdx = writeIdx_;
-    if (oldIdx != allocateIdx_) {  // TODO: Check is problematic. This will fail if the entire buffer is allocated!
-      // options to solve: Leave guard bytes between write -> allocate -> read
-      // other options: Extend *Idx_ with a bit that states whether this already wrapped around. Requires fiddly
-      // management to not doubly-allocate memory!
+    size_type requestedIndex = (data - buffer_);
+    size_type currentWriteIdx = writeIdx_;
+    if (requestedIndex != wrapToBufferIdx(currentWriteIdx)) {
+      // Out-of-order commit
+      return 0;
+    }
 
-      size_type requestedIndex = (allocationStart - buffer_);
+    size_type numElemsPublishable = bytesTillPointerOrBufferEnd_inside(currentWriteIdx, allocateIdx_);
+    if (numElems > numElemsPublishable) {
+      numElems = numElemsPublishable;
+    }
+    size_type newIdx = currentWriteIdx + numElems;
+    newIdx = wrapToDoubleBufferIdx(newIdx);
 
-      if (oldIdx >= bufferSize_) {
-        // Instead of wrapping oldIdx down, wrap requestedIndex up.
-        // Avoids having to readjust oldIdx fpr the compare_exchange_strong further below.
-        requestedIndex += bufferSize_;
-      }
-
-      if (oldIdx != requestedIndex) {
-        // Out-of-order commit
-        return 0;
-      } else {
-        size_type newIdx = oldIdx + numElems;
-        newIdx = wrapToDoubleBufferIdx(newIdx);
-
-        // Check if the memory to be published was previously allocated.
-        if (writeIdx_.compare_exchange_strong(oldIdx, newIdx, std::memory_order_acq_rel)) {
-          return numElems;
-        } else {
-          return 0;
-        }
-      }
+    // Check if the memory to be published was previously allocated.
+    if (writeIdx_.compare_exchange_strong(currentWriteIdx, newIdx, std::memory_order_acq_rel)) {
+      return numElems;
     } else {
       return 0;
     }
@@ -115,7 +104,6 @@ AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type data, s
       return 0;
     }
     size_type numElemsFreeable = bytesTillPointerOrBufferEnd_inside(currentReadIdx, writeIdx_);
-    numElemsFreeable = wrapToBufferSize(numElemsFreeable);
     if (len > numElemsFreeable) {
       len = numElemsFreeable;
     }
