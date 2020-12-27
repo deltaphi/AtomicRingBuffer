@@ -26,7 +26,8 @@ class AtomicRingBuffer {
   using size_type = std::size_t;
   using atomic_size_type = std::atomic_size_t;
 
-  AtomicRingBuffer() : buffer_(nullptr), bufferSize_(0), writeIdx_(0), allocateIdx_(0), readIdx_(0) {}
+  constexpr AtomicRingBuffer() : buffer_(nullptr), bufferSize_(0) {}
+  constexpr AtomicRingBuffer(pointer_type buf, size_type len) : buffer_(buf), bufferSize_(len) {}
 
   void init(pointer_type buf, size_type len) {
     buffer_ = buf;
@@ -101,12 +102,14 @@ class AtomicRingBuffer {
     }
     return idx;
   }
+
   constexpr size_type wrapToBufferIdx(size_type idx) const {
     if (idx >= bufferSize_) {
       idx -= bufferSize_;
     }
     return idx;
   }
+
   constexpr size_type wrapToDoubleBufferIdx(size_type idx) const {
     if (idx >= (2 * bufferSize_)) {
       idx -= 2 * bufferSize_;
@@ -119,11 +122,11 @@ class AtomicRingBuffer {
     return bytesToPointerOrBufferEnd(lower, upper, true);
   }
 
-  constexpr size_type bytesToSectionEnd(const size_type ptr) const {
-    if (pointsToUpperSection(ptr)) {
-      return upperSectionEndIdx() - ptr;
+  constexpr size_type bytesRemainingInBuffer(const size_type idx) const {
+    if (pointsToUpperSection(idx)) {
+      return upperSectionEndIdx() - idx;
     } else {
-      return endIdx() - ptr;
+      return endIdx() - idx;
     }
   }
 
@@ -147,13 +150,13 @@ class AtomicRingBuffer {
   size_type bufferSize_;
 
   // Until where can be read
-  atomic_size_type writeIdx_;
+  atomic_size_type writeIdx_{0};
 
   // Until where elements have been allocated
-  atomic_size_type allocateIdx_;
+  atomic_size_type allocateIdx_{0};
 
   // From where can be read
-  atomic_size_type readIdx_;
+  atomic_size_type readIdx_{0};
 };
 
 }  // namespace AtomicRingBuffer

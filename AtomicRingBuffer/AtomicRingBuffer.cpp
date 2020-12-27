@@ -4,22 +4,26 @@ namespace AtomicRingBuffer {
 
 AtomicRingBuffer::size_type AtomicRingBuffer::bytesToPointerOrBufferEnd(const size_type lower, const size_type upper,
                                                                         bool isInside) const {
-  size_type bytesAvailable = bytesToSectionEnd(lower);
-  size_type upperBytesAvailable = bytesToSectionEnd(upper);
-  if (upperBytesAvailable < bytesAvailable) {
-    bytesAvailable -= upperBytesAvailable;
-  } else if (!isInside && upperBytesAvailable == bytesAvailable && !sameSection(lower, upper)) {
-    bytesAvailable -= upperBytesAvailable;
+  size_type bytesAvailable = bytesRemainingInBuffer(lower);
+  size_type upperBytesUsed = bytesRemainingInBuffer(upper);
+
+  // Figure out whether the memory managed by upper eats into the bytesAvailable
+  if (upperBytesUsed < bytesAvailable) {
+    bytesAvailable -= upperBytesUsed;
+  } else if (!isInside && upperBytesUsed == bytesAvailable && !sameSection(lower, upper)) {
+    bytesAvailable -= upperBytesUsed;
   } else if (isInside && lower == upper) {
-    bytesAvailable -= upperBytesAvailable;
+    bytesAvailable -= upperBytesUsed;
   }
   return bytesAvailable;
 }
 
 AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &data, size_type len, bool partial_acceptable) {
+  // Find how many bytes can be allocated
   size_type origAllocateIdx = allocateIdx_;
   size_type allocatedBytes = allocate(origAllocateIdx, readIdx_, false, data, len, partial_acceptable);
 
+  // Make the allocation
   size_type newAllocateIdx = origAllocateIdx + allocatedBytes;
   newAllocateIdx = wrapToDoubleBufferIdx(newAllocateIdx);
 
@@ -27,35 +31,6 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &data, size_
       allocateIdx_.compare_exchange_strong(origAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
     origAllocateIdx = wrapToBufferIdx(origAllocateIdx);
     return allocatedBytes;
-  } else {
-    return 0;
-  }
-}
-
-AtomicRingBuffer::size_type AtomicRingBuffer::commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd,
-                                                     const pointer_type data, size_type len) {
-  if (buffer_ <= data && data <= &buffer_[bufferSize_ - 1]) {
-    // Check whether there was actually memory allocated that is now being published.
-    size_type requestedIndex = (data - buffer_);
-    size_type currentWriteIdx = sectionBegin;
-    if (requestedIndex != wrapToBufferIdx(currentWriteIdx)) {
-      // Out-of-order commit
-      return 0;
-    }
-
-    size_type numCommitableElems = bytesToPointerOrBufferEnd_inside(currentWriteIdx, sectionEnd);
-    if (len > numCommitableElems) {
-      len = numCommitableElems;
-    }
-    size_type newIdx = currentWriteIdx + len;
-    newIdx = wrapToDoubleBufferIdx(newIdx);
-
-    // Check if the memory to be published was previously allocated.
-    if (sectionBegin.compare_exchange_strong(currentWriteIdx, newIdx, std::memory_order_acq_rel)) {
-      return len;
-    } else {
-      return 0;
-    }
   } else {
     return 0;
   }
@@ -80,6 +55,35 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(size_type sectionBegin, s
     }
     data = &buffer_[dataStartIdx];
     return len;
+  }
+}
+
+AtomicRingBuffer::size_type AtomicRingBuffer::commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd,
+                                                     const pointer_type data, size_type len) {
+  if (buffer_ <= data && data <= &buffer_[bufferSize_ - 1]) {
+    // Check whether there was actually memory allocated that is now being published.
+    size_type requestedIndex = (data - buffer_);
+    size_type currentWriteIdx = sectionBegin;
+    if (requestedIndex != wrapToBufferIdx(currentWriteIdx)) {
+      // Reject out-of-order commit
+      return 0;
+    }
+
+    size_type numCommitableElems = bytesToPointerOrBufferEnd_inside(currentWriteIdx, sectionEnd);
+    if (len > numCommitableElems) {
+      len = numCommitableElems;
+    }
+    size_type newIdx = currentWriteIdx + len;
+    newIdx = wrapToDoubleBufferIdx(newIdx);
+
+    // Check if the memory to be published was previously allocated.
+    if (sectionBegin.compare_exchange_strong(currentWriteIdx, newIdx, std::memory_order_acq_rel)) {
+      return len;
+    } else {
+      return 0;
+    }
+  } else {
+    return 0;
   }
 }
 
