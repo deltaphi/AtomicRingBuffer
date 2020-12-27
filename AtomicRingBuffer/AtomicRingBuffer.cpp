@@ -67,14 +67,8 @@ AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type allocat
         return 0;
       } else {
         size_type newIdx = oldIdx + numElems;
-        if (newIdx > (2 * bufferSize_)) {
-          // Something went wrong, don't modify anything
-          return 0;
-        } else if (newIdx == (2 * bufferSize_)) {
-          // Wrap around
-          newIdx = 0;
-        }
-
+        newIdx = wrapToDoubleBufferIdx(newIdx);
+        
         // Check if the memory to be published was previously allocated.
         if (writeIdx_.compare_exchange_strong(oldIdx, newIdx, std::memory_order_acq_rel)) {
           return numElems;
@@ -98,9 +92,7 @@ AtomicRingBuffer::size_type AtomicRingBuffer::peek(pointer_type &data, size_type
   if (dataAvailable == 0) {
     return 0;
   } else {
-    if (readIdx >= bufferSize_) {
-      readIdx -= bufferSize_;
-    }
+    readIdx = wrapToBufferIdx(readIdx);
     if (dataAvailable < len) {
       if (partial_acceptable) {
         len = dataAvailable;
