@@ -68,7 +68,7 @@ AtomicRingBuffer::size_type AtomicRingBuffer::publish(const pointer_type allocat
       } else {
         size_type newIdx = oldIdx + numElems;
         newIdx = wrapToDoubleBufferIdx(newIdx);
-        
+
         // Check if the memory to be published was previously allocated.
         if (writeIdx_.compare_exchange_strong(oldIdx, newIdx, std::memory_order_acq_rel)) {
           return numElems;
