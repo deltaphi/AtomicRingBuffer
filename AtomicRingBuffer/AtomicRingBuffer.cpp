@@ -116,20 +116,13 @@ AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type data, s
       return 0;
     }
     // not past-the-end
-    size_type currentWriteIdx = writeIdx_;
-    size_type endOfReadableArea = (currentReadIdx <= currentWriteIdx) ? currentWriteIdx : (2 * bufferSize_);
-    size_type numElemsFreeable = endOfReadableArea - currentReadIdx;
+    size_type numElemsFreeable = bytesTillPointerOrBufferEnd_inside(currentReadIdx, writeIdx_);
     numElemsFreeable = wrapToBufferSize(numElemsFreeable);
     if (len > numElemsFreeable) {
       len = numElemsFreeable;
     }
     size_type newReadIdx = currentReadIdx + len;
-    if (newReadIdx > 2 * bufferSize_) {
-      // Something went wrong.
-      return 0;
-    } else if (newReadIdx == (2 * bufferSize_)) {
-      newReadIdx = 0;
-    }
+    newReadIdx = wrapToDoubleBufferIdx(newReadIdx);
     if (readIdx_.compare_exchange_strong(currentReadIdx, newReadIdx, std::memory_order_acq_rel)) {
       return len;
     } else {
