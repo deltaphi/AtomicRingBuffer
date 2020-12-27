@@ -24,10 +24,6 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
 
   size_type availableBytes = bytesTillPointerOrBufferEnd_outside(origAllocateIdx, readIdx_);
 
-  if (availableBytes == 0) {
-    return 0;
-  }
-
   if (numElems > availableBytes) {
     // Not enough space available
     if (partial_acceptable) {
@@ -38,14 +34,10 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
   }
 
   size_type newAllocateIdx = origAllocateIdx + numElems;
-  if (newAllocateIdx >= (2 * bufferSize_)) {
-    newAllocateIdx -= 2 * bufferSize_;
-  }
+  newAllocateIdx = wrapToDoubleBufferIdx(newAllocateIdx);
 
   if (allocateIdx_.compare_exchange_strong(origAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
-    if (origAllocateIdx >= bufferSize_) {
-      origAllocateIdx -= bufferSize_;
-    }
+    origAllocateIdx = wrapToBufferIdx(origAllocateIdx);
     memory = &buffer_[origAllocateIdx];
     return numElems;
   } else {
