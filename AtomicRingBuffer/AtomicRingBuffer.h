@@ -112,7 +112,7 @@ class AtomicRingBuffer {
   }
 
   constexpr size_type bytesRemainingInBuffer(const size_type idx) const {
-    if (pointsToUpperSection(idx)) {
+    if (idxInUpperSection(idx)) {
       return upperSectionEndIdx() - idx;
     } else {
       return endIdx() - idx;
@@ -129,10 +129,10 @@ class AtomicRingBuffer {
    *
    * \returns FALSE for lower round, TRUE for upper round.
    */
-  constexpr bool pointsToUpperSection(const size_type ptr) const { return ptr >= endIdx(); }
+  constexpr bool idxInUpperSection(const size_type idx) const { return idx >= endIdx(); }
 
   constexpr bool sameSection(const size_type lower, const size_type upper) const {
-    return pointsToUpperSection(lower) == pointsToUpperSection(upper);
+    return idxInUpperSection(lower) == idxInUpperSection(upper);
   }
 
   pointer_type buffer_;
