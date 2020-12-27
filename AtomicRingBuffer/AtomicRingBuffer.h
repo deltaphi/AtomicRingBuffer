@@ -99,6 +99,12 @@ class AtomicRingBuffer {
   constexpr size_type endIdx() const { return bufferSize_; }
   constexpr size_type upperSectionEndIdx() const { return 2 * bufferSize_; }
 
+  constexpr size_type wrapToBufferSize(size_type idx) const {
+    if (idx > bufferSize_) {
+      idx -= bufferSize_;
+    }
+    return idx;
+  }
   constexpr size_type wrapToBufferIdx(size_type idx) const {
     if (idx >= bufferSize_) {
       idx -= bufferSize_;

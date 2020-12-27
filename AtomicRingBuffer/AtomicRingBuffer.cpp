@@ -119,12 +119,7 @@ AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type data, s
     size_type currentWriteIdx = writeIdx_;
     size_type endOfReadableArea = (currentReadIdx <= currentWriteIdx) ? currentWriteIdx : (2 * bufferSize_);
     size_type numElemsFreeable = endOfReadableArea - currentReadIdx;
-    if (numElemsFreeable > bufferSize_) {
-      numElemsFreeable -= bufferSize_;
-    }
-    if (numElemsFreeable == 0) {
-      return 0;
-    }
+    numElemsFreeable = wrapToBufferSize(numElemsFreeable);
     if (len > numElemsFreeable) {
       len = numElemsFreeable;
     }
