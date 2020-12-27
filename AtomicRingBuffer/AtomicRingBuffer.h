@@ -67,28 +67,22 @@ class AtomicRingBuffer {
   size_type capacity() const { return bufferSize_; }
 
   size_type size() const {
-    if (bufferSize_ == 0) {
-      return 0;
+    size_type bytesAvailable = 0;
+    size_type currentReadIdx = readIdx_;
+    size_type currentWriteIdx = writeIdx_;
+    if (currentWriteIdx >= currentReadIdx) {
+      bytesAvailable = currentWriteIdx - currentReadIdx;
     } else {
-      size_type bytesAvailable = 0;
-      size_type currentReadIdx = readIdx_;
-      size_type currentWriteIdx = writeIdx_;
-      if (currentWriteIdx >= currentReadIdx) {
-        bytesAvailable = currentWriteIdx - currentReadIdx;
+      bytesAvailable = (2 * bufferSize_ - currentReadIdx);
+      bytesAvailable = wrapToBufferSize(bytesAvailable);
+      if (currentWriteIdx > bufferSize_) {
+        bytesAvailable += currentWriteIdx - bufferSize_;
       } else {
-        bytesAvailable = (2 * bufferSize_ - currentReadIdx);
-        if (bytesAvailable > bufferSize_) {
-          bytesAvailable -= bufferSize_;
-        }
-        if (currentWriteIdx > bufferSize_) {
-          bytesAvailable += currentWriteIdx - bufferSize_;
-        } else {
-          bytesAvailable += currentWriteIdx;
-        }
+        bytesAvailable += currentWriteIdx;
       }
-
-      return bytesAvailable;
     }
+
+    return bytesAvailable;
   }
 
  private:
