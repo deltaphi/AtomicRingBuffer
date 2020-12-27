@@ -25,7 +25,7 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
   size_type availableBytes = bytesTillPointerOrBufferEnd_outside(origAllocateIdx, readIdx_);
 
   if (numElems > availableBytes) {
-    // Not enough space available
+    // Not as much space available as requested
     if (partial_acceptable) {
       numElems = availableBytes;
     } else {
