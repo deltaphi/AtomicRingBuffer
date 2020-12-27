@@ -36,7 +36,8 @@ AtomicRingBuffer::size_type AtomicRingBuffer::allocate(pointer_type &memory, siz
   size_type newAllocateIdx = origAllocateIdx + numElems;
   newAllocateIdx = wrapToDoubleBufferIdx(newAllocateIdx);
 
-  if (allocateIdx_.compare_exchange_strong(origAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
+  if (newAllocateIdx != origAllocateIdx &&
+      allocateIdx_.compare_exchange_strong(origAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
     origAllocateIdx = wrapToBufferIdx(origAllocateIdx);
     memory = &buffer_[origAllocateIdx];
     return numElems;
