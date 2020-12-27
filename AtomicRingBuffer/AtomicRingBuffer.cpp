@@ -110,13 +110,10 @@ AtomicRingBuffer::size_type AtomicRingBuffer::consume(const pointer_type data, s
   if (buffer_ <= data && data <= &buffer_[bufferSize_ - 1]) {
     size_type requestedIdx = data - buffer_;
     size_type currentReadIdx = readIdx_;
-    if (currentReadIdx >= bufferSize_) {
-      requestedIdx += bufferSize_;
-    }
-    if (requestedIdx != currentReadIdx) {
+    if (requestedIdx != wrapToBufferIdx(currentReadIdx)) {
+      // Check for out-of-order consume
       return 0;
     }
-    // not past-the-end
     size_type numElemsFreeable = bytesTillPointerOrBufferEnd_inside(currentReadIdx, writeIdx_);
     numElemsFreeable = wrapToBufferSize(numElemsFreeable);
     if (len > numElemsFreeable) {
