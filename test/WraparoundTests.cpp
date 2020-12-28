@@ -94,8 +94,6 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
   uint8_t sendData = 0;
   uint8_t readData = 0;
 
-  std::size_t fillState = 0;
-
   while (sendData < 200) {
     // Send two packets and advance sendData by how many bytes were sent.
     for (int i = 0; i < 2; ++i) {
@@ -106,7 +104,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
       ASSERT_NE(mem, nullptr);
       EXPECT_EQ(ringBuffer.size(), sendData - readData);
 
-      for (int j = 0; j < numBytes; ++j) {
+      for (AtomicRingBuffer::size_type j = 0; j < numBytes; ++j) {
         mem[j] = sendData + j;
       }
       sendData += numBytes;
@@ -125,7 +123,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
       ASSERT_LE(numBytes, 5);
       ASSERT_NE(mem, nullptr);
 
-      for (int j = 0; j < numBytes; ++j) {
+      for (AtomicRingBuffer::size_type j = 0; j < numBytes; ++j) {
         EXPECT_EQ(mem[j], j + readData) << "Error reading at byte " << static_cast<uint16_t>(readData);
       }
       readData += numBytes;

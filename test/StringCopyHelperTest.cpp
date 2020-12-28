@@ -8,7 +8,7 @@ class StringCopyHelperFixture : public ::testing::Test {
   void SetUp() { memset(dstBuf_, kInitialValue_, kBufferSize_); }
 
   constexpr static const std::size_t kBufferSize_ = 128;
-  constexpr static const char kInitialValue_ = 0xFF;
+  constexpr static const char kInitialValue_ = '\xFF';
   using Buffer_t = char[kBufferSize_];
   Buffer_t dstBuf_;
 
@@ -40,7 +40,6 @@ TEST_F(StringCopyHelperFixture, dstNull) {
 
 TEST_F(StringCopyHelperFixture, srcLenNull) {
   constexpr static const char* text = "Hallo, Welt!";
-  const std::size_t charCount = strlen(text);
   const char* replacePtr = replace;
 
   EXPECT_EQ(AtomicRingBuffer::memcpyCharReplace(dst_, text, search, replacePtr, kBufferSize_, 0), 0);
@@ -100,7 +99,7 @@ TEST_F(StringCopyHelperFixture, noNewline) {
   EXPECT_NE(dst_, dstBuf_);
 
   EXPECT_EQ(memcmp(dstBuf_, text, charCount), 0);
-  for (int i = charCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = charCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
   EXPECT_EQ(replacePtr, replace);
@@ -123,7 +122,7 @@ TEST_F(StringCopyHelperFixture, newlineMiddle) {
   EXPECT_EQ(dst_ - dstBuf_, expectedCharCount) << "dstBuf_: " << dstBuf_;
 
   EXPECT_EQ(memcmp(dstBuf_, expectedText, expectedCharCount), 0);
-  for (int i = expectedCharCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = expectedCharCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
   EXPECT_EQ(replacePtr, replace);
@@ -145,7 +144,7 @@ TEST_F(StringCopyHelperFixture, newlineEnd) {
   EXPECT_EQ(dst_, dstBuf_ + expectedCharCount);
 
   EXPECT_EQ(memcmp(dstBuf_, expectedText, expectedCharCount), 0);
-  for (int i = expectedCharCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = expectedCharCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
   EXPECT_EQ(replacePtr, replace);
@@ -167,7 +166,7 @@ TEST_F(StringCopyHelperFixture, newlineBeginning) {
   EXPECT_EQ(dst_, dstBuf_ + expectedCharCount);
 
   EXPECT_EQ(memcmp(dstBuf_, expectedText, expectedCharCount), 0);
-  for (int i = expectedCharCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = expectedCharCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
   EXPECT_EQ(replacePtr, replace);
@@ -189,7 +188,7 @@ TEST_F(StringCopyHelperFixture, multiNewline) {
   EXPECT_EQ(dst_, dstBuf_ + expectedCharCount);
 
   EXPECT_EQ(memcmp(dstBuf_, expectedText, expectedCharCount), 0);
-  for (int i = expectedCharCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = expectedCharCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
   EXPECT_EQ(replacePtr, replace);
@@ -211,7 +210,7 @@ TEST_F(StringCopyHelperFixture, multiNewlineBeginning) {
   EXPECT_EQ(dst_, dstBuf_ + expectedCharCount);
 
   EXPECT_EQ(memcmp(dstBuf_, expectedText, expectedCharCount), 0);
-  for (int i = expectedCharCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = expectedCharCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
   EXPECT_EQ(replacePtr, replace);
@@ -233,7 +232,7 @@ TEST_F(StringCopyHelperFixture, repeatedNewlineStart) {
   EXPECT_EQ(dst_, dstBuf_ + expectedCharCount);
 
   EXPECT_EQ(memcmp(dstBuf_, expectedText, expectedCharCount), 0);
-  for (int i = expectedCharCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = expectedCharCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
   EXPECT_EQ(replacePtr, replace);
@@ -255,7 +254,7 @@ TEST_F(StringCopyHelperFixture, repeatedNewlineMiddle) {
   EXPECT_EQ(dst_, dstBuf_ + expectedCharCount);
 
   EXPECT_EQ(memcmp(dstBuf_, expectedText, expectedCharCount), 0);
-  for (int i = expectedCharCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = expectedCharCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
   EXPECT_EQ(replacePtr, replace);
@@ -277,7 +276,7 @@ TEST_F(StringCopyHelperFixture, repeatedNewlineEnd) {
   EXPECT_EQ(dst_, dstBuf_ + expectedCharCount);
 
   EXPECT_EQ(memcmp(dstBuf_, expectedText, expectedCharCount), 0);
-  for (int i = expectedCharCount; i < kBufferSize_; ++i) {
+  for (std::size_t i = expectedCharCount; i < kBufferSize_; ++i) {
     EXPECT_EQ(dstBuf_[i], kInitialValue_) << "dstBuf_[" << i << "]: " << dstBuf_[i];
   }
 }
