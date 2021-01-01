@@ -15,43 +15,47 @@ TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Size_Capacity) {
 }
 
 TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Allocate) {
-  uint8_t* mem;
-  EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 0);
-  EXPECT_EQ(mem, nullptr);
+  Mem mem = ringBuffer.allocate(5, false);
+  EXPECT_EQ(mem, Mem());
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), 0);
 }
 
 TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Publish) {
-  uint8_t* mem = buffer;
-  EXPECT_EQ(ringBuffer.publish(mem, 5), 0);
-  EXPECT_EQ(buffer, mem);
+  {
+    Mem mem{buffer, 5};
+    EXPECT_EQ(ringBuffer.publish(mem), 0);
+    EXPECT_EQ(mem.ptr, buffer);
+  }
 
-  EXPECT_EQ(ringBuffer.publish(nullptr, 5), 0);
-
+  {
+    Mem mem;
+    mem.len = 5;
+    EXPECT_EQ(ringBuffer.publish(mem), 0);
+  }
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), 0);
 }
 
 TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Peek) {
-  uint8_t* mem;
-  EXPECT_EQ(ringBuffer.peek(mem, 5, false), 0);
-  EXPECT_EQ(mem, nullptr);
+  Mem mem = ringBuffer.peek(5, false);
+  EXPECT_EQ(mem, Mem());
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), 0);
 }
 
 TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Consume) {
-  uint8_t* mem = buffer;
-  EXPECT_EQ(ringBuffer.consume(mem, 5), 0);
-  EXPECT_EQ(buffer, mem);
+  Mem mem{buffer, 5};
+  EXPECT_EQ(ringBuffer.consume(mem), 0);
+  EXPECT_EQ(mem.ptr, buffer);
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), 0);
 
-  EXPECT_EQ(ringBuffer.consume(nullptr, 5), 0);
+  Mem mem2{nullptr, 5};
+  EXPECT_EQ(ringBuffer.consume(mem2), 0);
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), 0);
@@ -65,27 +69,26 @@ TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Size_Capacity) {
 }
 
 TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Allocate) {
-  uint8_t* mem;
-  EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-  EXPECT_EQ(mem, buffer);
+  Mem mem = ringBuffer.allocate(5, false);
+  EXPECT_EQ(mem.len, 5);
+  EXPECT_EQ(mem.ptr, buffer);
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 }
 
 TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Allocate_Oversize) {
-  uint8_t* mem;
-  EXPECT_EQ(ringBuffer.allocate(mem, 15, false), 0);
-  EXPECT_EQ(mem, nullptr);
+  Mem mem = ringBuffer.allocate(15, false);
+  EXPECT_EQ(mem, Mem());
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 }
 
 TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Allocate_Oversize_Partial) {
-  uint8_t* mem;
-  EXPECT_EQ(ringBuffer.allocate(mem, 15, true), 10);
-  EXPECT_EQ(mem, buffer);
+  Mem mem = ringBuffer.allocate(15, true);
+  EXPECT_EQ(mem.len, 10);
+  EXPECT_EQ(mem.ptr, buffer);
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
@@ -95,34 +98,39 @@ TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Allocate_Oversize_Partial) {
  * Test publishing without allocating first.
  */
 TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Publish) {
-  uint8_t* mem = buffer;
-  EXPECT_EQ(ringBuffer.publish(mem, 5), 0);
-  EXPECT_EQ(buffer, mem);
+  Mem mem{buffer, 5};
+  EXPECT_EQ(ringBuffer.publish(mem), 0);
+  EXPECT_EQ(mem.ptr, buffer);
 
-  EXPECT_EQ(ringBuffer.publish(nullptr, 5), 0);
-
+  {
+    Mem mem2{nullptr, 5};
+    EXPECT_EQ(ringBuffer.publish(mem2), 0);
+  }
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 }
 
 TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Peek) {
-  uint8_t* mem;
-  EXPECT_EQ(ringBuffer.peek(mem, 5, false), 0);
-  EXPECT_EQ(mem, nullptr);
+  Mem mem = ringBuffer.peek(5, false);
+  EXPECT_EQ(mem.len, 0);
+  EXPECT_EQ(mem.ptr, nullptr);
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 }
 
 TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Consume) {
-  uint8_t* mem = buffer;
-  EXPECT_EQ(ringBuffer.consume(mem, 5), 0);
-  EXPECT_EQ(buffer, mem);
+  Mem mem{buffer, 5};
+  EXPECT_EQ(ringBuffer.consume(mem), 0);
+  EXPECT_EQ(mem.ptr, buffer);
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
-  EXPECT_EQ(ringBuffer.consume(nullptr, 5), 0);
+  {
+    Mem mem2{nullptr, 5};
+    EXPECT_EQ(ringBuffer.consume(mem2), 0);
+  }
 
   EXPECT_EQ(ringBuffer.size(), 0);
   EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
@@ -132,49 +140,48 @@ TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Consume) {
 
 TEST_F(BufferedAtomicBufferFixture, FullCycle) {
   {
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(buffer, mem);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     for (uint8_t i = 0; i < 5; ++i) {
-      mem[i] = i;
+      mem.ptr[i] = i;
     }
 
     EXPECT_EQ(ringBuffer.size(), 0);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     // TBD Error Cases: Publish without allocating, publish out of sequence data
-    EXPECT_EQ(ringBuffer.publish(mem, 5), 5);
+    EXPECT_EQ(ringBuffer.publish(mem), 5);
 
     EXPECT_EQ(ringBuffer.size(), 5);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
   }
 
   {
-    uint8_t* mem = nullptr;
-
     // TBD Error Cases: Peek partial
-    EXPECT_EQ(ringBuffer.peek(mem, 5, false), 5);
+    Mem mem = ringBuffer.peek(5, false);
+    EXPECT_EQ(mem.len, 5);
 
-    EXPECT_EQ(buffer, mem);
+    EXPECT_EQ(mem.ptr, buffer);
     EXPECT_EQ(ringBuffer.size(), 5);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     // Repeated peek
     {
-      uint8_t* mem2 = nullptr;
-      EXPECT_EQ(ringBuffer.peek(mem2, 5, false), 5);
+      Mem mem2 = ringBuffer.peek(5, false);
+      EXPECT_EQ(mem2.len, 5);
       EXPECT_EQ(mem, mem2);
     }
 
     for (uint8_t i = 0; i < 5; ++i) {
-      EXPECT_EQ(mem[i], i);
+      EXPECT_EQ(mem.ptr[i], i);
     }
     for (uint8_t i = 5; i < ringBuffer.capacity(); ++i) {
       EXPECT_EQ(buffer[i], 0xFF);
     }
 
     // TBD Error Cases: Consume without peek, consume out of order
-    EXPECT_EQ(ringBuffer.consume(mem, 5), 5);
+    EXPECT_EQ(ringBuffer.consume(mem), 5);
 
     EXPECT_EQ(ringBuffer.size(), 0);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
@@ -185,39 +192,40 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle) {
 
 TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_FullPeek) {
   {
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(buffer, mem);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     for (uint8_t i = 0; i < 3; ++i) {
-      mem[i] = i;
+      mem.ptr[i] = i;
     }
 
     EXPECT_EQ(ringBuffer.size(), 0);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
-    EXPECT_EQ(ringBuffer.publish(mem, 3), 3);
+    mem.len = 3;
+    EXPECT_EQ(ringBuffer.publish(mem), 3);
 
     EXPECT_EQ(ringBuffer.size(), 3);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
   }
 
   {
-    uint8_t* mem = nullptr;
+    Mem mem = ringBuffer.peek(5, true);
+    EXPECT_EQ(mem.len, 3);
 
-    EXPECT_EQ(ringBuffer.peek(mem, 5, true), 3);
-
-    EXPECT_EQ(buffer, mem);
+    EXPECT_EQ(mem.ptr, buffer);
     EXPECT_EQ(ringBuffer.size(), 3);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     for (uint8_t i = 0; i < 3; ++i) {
-      EXPECT_EQ(mem[i], i);
+      EXPECT_EQ(mem.ptr[i], i);
     }
     for (uint8_t i = 3; i < ringBuffer.capacity(); ++i) {
       EXPECT_EQ(buffer[i], 0xFF);
     }
 
-    EXPECT_EQ(ringBuffer.consume(mem, 5), 3);
+    mem.len = 5;
+    EXPECT_EQ(ringBuffer.consume(mem), 3);
 
     EXPECT_EQ(ringBuffer.size(), 0);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
@@ -227,18 +235,19 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_FullPeek) {
 // test allocate, partial publish, allocate, peek for the part
 TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_Allocate_FullPeek) {
   {
-    uint8_t* mem = nullptr;
     // Allocate 5 bytes but publish only 3 bytes.
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(buffer, mem);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     for (uint8_t i = 0; i < 3; ++i) {
-      mem[i] = i;
+      mem.ptr[i] = i;
     }
 
     EXPECT_EQ(ringBuffer.size(), 0);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
-    EXPECT_EQ(ringBuffer.publish(mem, 3), 3);
+    mem.len = 3;
+    EXPECT_EQ(ringBuffer.publish(mem), 3);
 
     EXPECT_EQ(ringBuffer.size(), 3);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
@@ -246,30 +255,31 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_Allocate_FullPeek) 
 
   {
     // Allocate an additional 5 bytes
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(mem, buffer + 5);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer + 5);
     EXPECT_EQ(ringBuffer.size(), 3);
   }
 
   {
-    uint8_t* mem = nullptr;
     // Try to read 5 bytes but get only 3
-    EXPECT_EQ(ringBuffer.peek(mem, 5, true), 3);
+    Mem mem = ringBuffer.peek(5, true);
+    EXPECT_EQ(mem.len, 3);
 
-    EXPECT_EQ(buffer, mem);
+    EXPECT_EQ(mem.ptr, buffer);
     EXPECT_EQ(ringBuffer.size(), 3);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     for (uint8_t i = 0; i < 3; ++i) {
-      EXPECT_EQ(mem[i], i);
+      EXPECT_EQ(mem.ptr[i], i);
     }
     for (uint8_t i = 3; i < ringBuffer.capacity(); ++i) {
       EXPECT_EQ(buffer[i], 0xFF);
     }
 
     // Try to consume 5 bytes but consume only 3.
-    EXPECT_EQ(ringBuffer.consume(mem, 5), 3);
+    mem.len = 5;
+    EXPECT_EQ(ringBuffer.consume(mem), 3);
 
     EXPECT_EQ(ringBuffer.size(), 0);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
@@ -279,41 +289,42 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPublish_Allocate_FullPeek) 
 // test repeated consumption
 TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPeek_RepeatedConsume) {
   {
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(buffer, mem);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     for (uint8_t i = 0; i < 5; ++i) {
-      mem[i] = i;
+      mem.ptr[i] = i;
     }
 
-    EXPECT_EQ(ringBuffer.publish(mem, 5), 5);
+    EXPECT_EQ(ringBuffer.publish(mem), 5);
 
     EXPECT_EQ(ringBuffer.size(), 5);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
   }
 
   {
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.peek(mem, 3, false), 3);
+    Mem mem = ringBuffer.peek(3, false);
+    EXPECT_EQ(mem.len, 3);
 
-    EXPECT_EQ(buffer, mem);
+    EXPECT_EQ(mem.ptr, buffer);
     EXPECT_EQ(ringBuffer.size(), 5);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     for (uint8_t i = 0; i < 5; ++i) {
-      EXPECT_EQ(mem[i], i);
+      EXPECT_EQ(mem.ptr[i], i);
     }
     for (uint8_t i = 5; i < ringBuffer.capacity(); ++i) {
       EXPECT_EQ(buffer[i], 0xFF);
     }
 
     // TBD Error Cases: Consume without peek, consume out of order, Consume more than was peeked.
-    EXPECT_EQ(ringBuffer.consume(mem, 3), 3);
+    mem.len = 3;
+    EXPECT_EQ(ringBuffer.consume(mem), 3);
     EXPECT_EQ(ringBuffer.size(), 2);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     // Repeat consumption using the same source pointer
-    EXPECT_EQ(ringBuffer.consume(mem, 3), 0);
+    EXPECT_EQ(ringBuffer.consume(mem), 0);
     EXPECT_EQ(ringBuffer.size(), 2);
   }
 }
@@ -321,48 +332,50 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPeek_RepeatedConsume) {
 // test partial peek
 TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPeek_RepeatedPeek) {
   {
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(buffer, mem);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     for (uint8_t i = 0; i < 5; ++i) {
-      mem[i] = i;
+      mem.ptr[i] = i;
     }
 
-    EXPECT_EQ(ringBuffer.publish(mem, 5), 5);
+    EXPECT_EQ(ringBuffer.publish(mem), 5);
 
     EXPECT_EQ(ringBuffer.size(), 5);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
   }
 
   {
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.peek(mem, 3, false), 3);
+    Mem mem = ringBuffer.peek(3, false);
+    EXPECT_EQ(mem.len, 3);
 
-    EXPECT_EQ(buffer, mem);
+    EXPECT_EQ(mem.ptr, buffer);
     EXPECT_EQ(ringBuffer.size(), 5);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     for (uint8_t i = 0; i < 5; ++i) {
-      EXPECT_EQ(mem[i], i);
+      EXPECT_EQ(mem.ptr[i], i);
     }
     for (uint8_t i = 5; i < ringBuffer.capacity(); ++i) {
       EXPECT_EQ(buffer[i], 0xFF);
     }
 
     // TBD Error Cases: Consume without peek, consume out of order, Consume more than was peeked.
-    EXPECT_EQ(ringBuffer.consume(mem, 3), 3);
+    mem.len = 3;
+    EXPECT_EQ(ringBuffer.consume(mem), 3);
     EXPECT_EQ(ringBuffer.size(), 2);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     // Peek & Consume the remainder
-    EXPECT_EQ(ringBuffer.peek(mem, 2, false), 2);
+    mem = ringBuffer.peek(2, false);
+    EXPECT_EQ(mem.len, 2);
 
-    EXPECT_EQ(buffer + 3, mem);
+    EXPECT_EQ(mem.ptr, buffer + 3);
 
     for (uint8_t i = 0; i < 2; ++i) {
-      EXPECT_EQ(mem[i], i + 3);
+      EXPECT_EQ(mem.ptr[i], i + 3);
     }
-    EXPECT_EQ(ringBuffer.consume(mem, 2), 2);
+    EXPECT_EQ(ringBuffer.consume(mem), 2);
     EXPECT_EQ(ringBuffer.size(), 0);
   }
 }
@@ -371,14 +384,14 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_PartialPeek_RepeatedPeek) {
 TEST_F(BufferedAtomicBufferFixture, FullCycle_FullPeek_PartialConsume) {
   {
     // Write 5 bytes to the buffer
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(buffer, mem);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     for (uint8_t i = 0; i < 5; ++i) {
-      mem[i] = i;
+      mem.ptr[i] = i;
     }
 
-    EXPECT_EQ(ringBuffer.publish(mem, 5), 5);
+    EXPECT_EQ(ringBuffer.publish(mem), 5);
 
     EXPECT_EQ(ringBuffer.size(), 5);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
@@ -386,54 +399,58 @@ TEST_F(BufferedAtomicBufferFixture, FullCycle_FullPeek_PartialConsume) {
 
   {
     // Peek 5 bytes
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.peek(mem, 5, false), 5);
+    Mem mem = ringBuffer.peek(5, false);
+    EXPECT_EQ(mem.len, 5);
 
-    EXPECT_EQ(buffer, mem);
+    EXPECT_EQ(mem.ptr, buffer);
     EXPECT_EQ(ringBuffer.size(), 5);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     for (uint8_t i = 0; i < 5; ++i) {
-      EXPECT_EQ(mem[i], i);
+      EXPECT_EQ(mem.ptr[i], i);
     }
     for (uint8_t i = 5; i < ringBuffer.capacity(); ++i) {
       EXPECT_EQ(buffer[i], 0xFF);
     }
 
     // Consume 3 bytes
-    EXPECT_EQ(ringBuffer.consume(mem, 3), 3);
+    mem.len = 3;
+    EXPECT_EQ(ringBuffer.consume(mem), 3);
     EXPECT_EQ(ringBuffer.size(), 2);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);
 
     // Peek & Consume the remainder (2 bytes)
 
     // Try overpeeking first (won't work)
-    EXPECT_EQ(ringBuffer.peek(mem, 5, false), 0);
-    EXPECT_EQ(mem, nullptr);
+    mem = ringBuffer.peek(5, false);
+    EXPECT_EQ(mem.len, 0);
+    EXPECT_EQ(mem.ptr, nullptr);
     // Try overpeeking but accepting a partial result
-    EXPECT_EQ(ringBuffer.peek(mem, 5, true), 2);
+    mem = ringBuffer.peek(5, true);
+    EXPECT_EQ(mem.len, 2);
     EXPECT_EQ(ringBuffer.size(), 2);
 
-    EXPECT_EQ(buffer + 3, mem);
+    EXPECT_EQ(mem.ptr, buffer + 3);
 
     for (uint8_t i = 0; i < 2; ++i) {
-      EXPECT_EQ(mem[i], i + 3);
+      EXPECT_EQ(mem.ptr[i], i + 3);
     }
-    EXPECT_EQ(ringBuffer.consume(mem, 2), 2);
+    EXPECT_EQ(ringBuffer.consume(mem), 2);
     EXPECT_EQ(ringBuffer.size(), 0);
   }
 }
 
 TEST_F(BufferedAtomicBufferFixture, SkipPublish) {
   {
-    uint8_t* mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(buffer, mem);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     for (uint8_t i = 0; i < 5; ++i) {
-      mem[i] = i;
+      mem.ptr[i] = i;
     }
 
-    EXPECT_EQ(ringBuffer.publish(mem + 3, 2), 0);
+    Mem mem2{mem.ptr + 3, 2};
+    EXPECT_EQ(ringBuffer.publish(mem2), 0);
 
     EXPECT_EQ(ringBuffer.size(), 0);
     EXPECT_EQ(ringBuffer.capacity(), kBufferSize);

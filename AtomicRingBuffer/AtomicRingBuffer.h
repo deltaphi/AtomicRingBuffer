@@ -26,10 +26,17 @@ class AtomicRingBuffer {
   using size_type = std::size_t;
   using atomic_size_type = std::atomic_size_t;
 
+  struct MemoryRange {
+    pointer_type ptr = nullptr;
+    size_type len = 0;
+
+    bool operator==(const MemoryRange &other) const { return ptr == other.ptr && len == other.len; }
+  };
+
   constexpr AtomicRingBuffer() : buffer_(nullptr), bufferSize_(0) {}
   constexpr AtomicRingBuffer(pointer_type buf, size_type len) : buffer_(buf), bufferSize_(len) {}
 
-  void init(pointer_type buf, size_type len) {
+  void init(pointer_type buf, const size_type len) {
     buffer_ = buf;
     bufferSize_ = len;
 
@@ -44,25 +51,25 @@ class AtomicRingBuffer {
    * elements available without wraparound than were expected. Return number of
    * allocated elements.
    */
-  size_type allocate(pointer_type &memory, size_type numElems, bool partial_acceptable);
+  MemoryRange allocate(const size_type numElems, const bool partial_acceptable);
 
   /**
    * Sends of allocated bytes. Can send parts of an allocaton but cannot send
    * out-of-order. Cannot send bytes wrapping around the buffer.
    */
-  size_type publish(const pointer_type data, size_type len) { return commit(writeIdx_, allocateIdx_, data, len); }
+  size_type publish(const MemoryRange data) { return commit(writeIdx_, allocateIdx_, data); }
 
   /**
    * Returns pointer and length to available data.
    */
-  size_type peek(pointer_type &data, size_type len, bool partial_acceptable) const {
-    return allocate(readIdx_, writeIdx_, true, data, len, partial_acceptable);
+  MemoryRange peek(const size_type len, const bool partial_acceptable) const {
+    return allocate(readIdx_, writeIdx_, true, len, partial_acceptable);
   }
 
   /**
    * Free up space in the buffer.
    */
-  size_type consume(const pointer_type data, size_type len) { return commit(readIdx_, writeIdx_, data, len); }
+  size_type consume(const MemoryRange data) { return commit(readIdx_, writeIdx_, data); }
 
   size_type capacity() const { return bufferSize_; }
 
@@ -119,10 +126,9 @@ class AtomicRingBuffer {
     }
   }
 
-  size_type allocate(size_type sectionBegin, size_type sectionEnd, bool isInside, pointer_type &data, size_type len,
-                     bool partial_acceptable) const;
-  size_type commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd, const pointer_type data,
-                   size_type len);
+  MemoryRange allocate(const size_type sectionBegin, const size_type sectionEnd, const bool isInside,
+                       const size_type len, const bool partial_acceptable) const;
+  size_type commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd, const MemoryRange data);
 
   /**
    * \brief Whether a pointer points to the lower or the upper round of the buffer

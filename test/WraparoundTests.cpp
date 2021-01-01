@@ -10,59 +10,58 @@ namespace AtomicRingBuffer {
 // Test wrap-around publish with/without accept partial
 
 TEST_F(FilledAtomicBufferFixture, MatchingAllocate_Full) {
-  AtomicRingBuffer::pointer_type mem = nullptr;
-  EXPECT_EQ(ringBuffer.allocate(mem, 3, false), 3);
-  EXPECT_EQ(mem, buffer + kInitialFill);
+  Mem mem = ringBuffer.allocate(3, false);
+  EXPECT_EQ(mem.len, 3);
+  EXPECT_EQ(mem.ptr, buffer + kInitialFill);
 }
 
 TEST_F(FilledAtomicBufferFixture, MatchingAllocate_Partial) {
-  AtomicRingBuffer::pointer_type mem = nullptr;
-  EXPECT_EQ(ringBuffer.allocate(mem, 3, true), 3);
-  EXPECT_EQ(mem, buffer + kInitialFill);
+  Mem mem = ringBuffer.allocate(3, true);
+  EXPECT_EQ(mem.len, 3);
+  EXPECT_EQ(mem.ptr, buffer + kInitialFill);
 }
 
 TEST_F(FilledAtomicBufferFixture, PartialAllocate_Full) {
-  AtomicRingBuffer::pointer_type mem = nullptr;
-  EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 0);
-  EXPECT_EQ(mem, nullptr);
+  Mem mem = ringBuffer.allocate(5, false);
+  EXPECT_EQ(mem, Mem());
 }
 
 TEST_F(FilledAtomicBufferFixture, PartialAllocate_Partial) {
-  AtomicRingBuffer::pointer_type mem = nullptr;
-  EXPECT_EQ(ringBuffer.allocate(mem, 5, true), 3);
-  EXPECT_EQ(mem, buffer + kInitialFill);
+  Mem mem = ringBuffer.allocate(5, true);
+  EXPECT_EQ(mem.len, 3);
+  EXPECT_EQ(mem.ptr, buffer + kInitialFill);
 }
 
 TEST_F(FilledAtomicBufferFixture, Consume_MatchingAllocate_Full) {
   consume5BytesAtStart();
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 3, true), 3);
-    EXPECT_EQ(mem, buffer + kInitialFill);
+    Mem mem = ringBuffer.allocate(3, true);
+    EXPECT_EQ(mem.len, 3);
+    EXPECT_EQ(mem.ptr, buffer + kInitialFill);
   }
 }
 
 TEST_F(FilledAtomicBufferFixture, Consume_MatchingAllocate_Partial) {
   consume5BytesAtStart();
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 3, false), 3);
-    EXPECT_EQ(mem, buffer + kInitialFill);
+    Mem mem = ringBuffer.allocate(3, false);
+    EXPECT_EQ(mem.len, 3);
+    EXPECT_EQ(mem.ptr, buffer + kInitialFill);
   }
 }
 
 TEST_F(FilledAtomicBufferFixture, Consume_PartialAllocate_Full) {
   consume5BytesAtStart();
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, true), 3);
-    EXPECT_EQ(mem, buffer + kInitialFill);
+    Mem mem = ringBuffer.allocate(5, true);
+    EXPECT_EQ(mem.len, 3);
+    EXPECT_EQ(mem.ptr, buffer + kInitialFill);
     EXPECT_EQ(ringBuffer.size(), 2);
   }
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, true), 5);
-    EXPECT_EQ(mem, buffer);
+    Mem mem = ringBuffer.allocate(5, true);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     EXPECT_EQ(ringBuffer.size(), 2);
   }
 }
@@ -70,21 +69,21 @@ TEST_F(FilledAtomicBufferFixture, Consume_PartialAllocate_Full) {
 TEST_F(FilledAtomicBufferFixture, Consume_PartialAllocate_Partial) {
   consume5BytesAtStart();
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 0);
-    EXPECT_EQ(mem, nullptr);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 0);
+    EXPECT_EQ(mem.ptr, nullptr);
     EXPECT_EQ(ringBuffer.size(), 2);
   }
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 3, false), 3);
-    EXPECT_EQ(mem, buffer + kInitialFill);
+    Mem mem = ringBuffer.allocate(3, false);
+    EXPECT_EQ(mem.len, 3);
+    EXPECT_EQ(mem.ptr, buffer + kInitialFill);
     EXPECT_EQ(ringBuffer.size(), 2);
   }
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem, 5, false), 5);
-    EXPECT_EQ(mem, buffer);
+    Mem mem = ringBuffer.allocate(5, false);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
     EXPECT_EQ(ringBuffer.size(), 2);
   }
 }
@@ -97,39 +96,35 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
   while (sendData < 200) {
     // Send two packets and advance sendData by how many bytes were sent.
     for (int i = 0; i < 2; ++i) {
-      AtomicRingBuffer::pointer_type mem = nullptr;
-      AtomicRingBuffer::size_type numBytes = ringBuffer.allocate(mem, 3, true);
-      ASSERT_GT(numBytes, 0);
-      ASSERT_LE(numBytes, 3);
-      ASSERT_NE(mem, nullptr);
+      Mem mem = ringBuffer.allocate(3, true);
+      ASSERT_GT(mem.len, 0);
+      ASSERT_LE(mem.len, 3);
+      ASSERT_NE(mem.ptr, nullptr);
       EXPECT_EQ(ringBuffer.size(), sendData - readData);
 
-      for (AtomicRingBuffer::size_type j = 0; j < numBytes; ++j) {
-        mem[j] = sendData + j;
+      for (AtomicRingBuffer::size_type j = 0; j < mem.len; ++j) {
+        mem.ptr[j] = sendData + j;
       }
-      sendData += numBytes;
+      sendData += mem.len;
 
-      ASSERT_EQ(ringBuffer.publish(mem, numBytes), numBytes)
-          << "Error publishing at byte " << static_cast<uint16_t>(sendData);
+      ASSERT_EQ(ringBuffer.publish(mem), mem.len) << "Error publishing at byte " << static_cast<uint16_t>(sendData);
       EXPECT_EQ(ringBuffer.size(), sendData - readData);
     }
 
     // Read integers in chunks of up to 5
     {
       EXPECT_EQ(ringBuffer.size(), sendData - readData);
-      AtomicRingBuffer::pointer_type mem = nullptr;
-      AtomicRingBuffer::size_type numBytes = ringBuffer.peek(mem, 5, true);
-      ASSERT_GT(numBytes, 0);
-      ASSERT_LE(numBytes, 5);
-      ASSERT_NE(mem, nullptr);
+      Mem mem = ringBuffer.peek(5, true);
+      ASSERT_GT(mem.len, 0);
+      ASSERT_LE(mem.len, 5);
+      ASSERT_NE(mem.ptr, nullptr);
 
-      for (AtomicRingBuffer::size_type j = 0; j < numBytes; ++j) {
-        EXPECT_EQ(mem[j], j + readData) << "Error reading at byte " << static_cast<uint16_t>(readData);
+      for (AtomicRingBuffer::size_type j = 0; j < mem.len; ++j) {
+        EXPECT_EQ(mem.ptr[j], j + readData) << "Error reading at byte " << static_cast<uint16_t>(readData);
       }
-      readData += numBytes;
+      readData += mem.len;
 
-      ASSERT_EQ(ringBuffer.consume(mem, numBytes), numBytes)
-          << "Error consuming at byte " << static_cast<uint16_t>(readData);
+      ASSERT_EQ(ringBuffer.consume(mem), mem.len) << "Error consuming at byte " << static_cast<uint16_t>(readData);
       EXPECT_EQ(ringBuffer.size(), sendData - readData);
     }
   }
@@ -137,123 +132,122 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
 
 TEST_F(BufferedAtomicBufferFixture, FullCircle_WriteBeforeRead) {
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-
-    ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, false), kBufferSize);
+    Mem mem = ringBuffer.allocate(kBufferSize, false);
+    ASSERT_EQ(mem.len, kBufferSize);
     EXPECT_EQ(ringBuffer.size(), 0);
     // Push so that the buffer is completely full
-    ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
+    ASSERT_EQ(ringBuffer.publish(mem), kBufferSize);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
 
     // Consume the entire buffer
-    ASSERT_EQ(ringBuffer.consume(mem, kBufferSize), kBufferSize);
+    ASSERT_EQ(ringBuffer.consume(mem), kBufferSize);
     EXPECT_EQ(ringBuffer.size(), 0);
 
     // Fill the buffer again
-    ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, false), kBufferSize);
+    mem = ringBuffer.allocate(kBufferSize, false);
+    ASSERT_EQ(mem.len, kBufferSize);
     EXPECT_EQ(ringBuffer.size(), 0);
-    ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
+    ASSERT_EQ(ringBuffer.publish(mem), kBufferSize);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
   }
 
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-
     // Consume 3 bytes
-    ASSERT_EQ(ringBuffer.peek(mem, 3, true), 3);
+    Mem mem = ringBuffer.peek(3, true);
+    ASSERT_EQ(mem.len, 3);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
-    ASSERT_NE(mem, nullptr);
-    ASSERT_EQ(ringBuffer.consume(mem, 3), 3);
+    ASSERT_NE(mem.ptr, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem), 3);
     EXPECT_EQ(ringBuffer.size(), 7);
 
-    mem = nullptr;
     // Consume whatever there is left.
-    ASSERT_EQ(ringBuffer.peek(mem, std::numeric_limits<AtomicRingBuffer::size_type>::max(), true), 7);
+    mem = ringBuffer.peek(std::numeric_limits<AtomicRingBuffer::size_type>::max(), true);
+    ASSERT_EQ(mem.len, 7);
     EXPECT_EQ(ringBuffer.size(), 7);
-    ASSERT_NE(mem, nullptr);
-    ASSERT_EQ(ringBuffer.consume(mem, 7), 7);
+    ASSERT_NE(mem.ptr, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem), 7);
     EXPECT_EQ(ringBuffer.size(), 0);
   }
 }
 
 TEST_F(BufferedAtomicBufferFixture, FullCircle_LessOneByte) {
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-
-    ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, false), kBufferSize);
+    Mem mem = ringBuffer.allocate(kBufferSize, false);
+    ASSERT_EQ(mem.len, kBufferSize);
     EXPECT_EQ(ringBuffer.size(), 0);
     // Push so that the buffer is completely full
-    ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
+    ASSERT_EQ(ringBuffer.publish(mem), kBufferSize);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
 
     // Consume the entire buffer less one byte
-    ASSERT_EQ(ringBuffer.consume(mem, kBufferSize - 1), kBufferSize - 1);
+    mem.len = kBufferSize - 1;
+    ASSERT_EQ(ringBuffer.consume(mem), kBufferSize - 1);
     EXPECT_EQ(ringBuffer.size(), 1);
 
     // Fill the buffer again
-    ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, true), kBufferSize - 1);
+    mem = ringBuffer.allocate(kBufferSize, true);
+    ASSERT_EQ(mem.len, kBufferSize - 1);
     EXPECT_EQ(ringBuffer.size(), 1);
-    ASSERT_EQ(ringBuffer.publish(mem, kBufferSize - 1), kBufferSize - 1);
+    ASSERT_EQ(ringBuffer.publish(mem), kBufferSize - 1);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
   }
 
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-
     // Consume 1 byte before wraparound
-    ASSERT_EQ(ringBuffer.peek(mem, 3, true), 1);
+    Mem mem = ringBuffer.peek(3, true);
+    ASSERT_EQ(mem.len, 1);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
-    ASSERT_NE(mem, nullptr);
-    ASSERT_EQ(ringBuffer.consume(mem, 1), 1);
+    ASSERT_NE(mem.ptr, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem), 1);
     EXPECT_EQ(ringBuffer.size(), kBufferSize - 1);
 
-    mem = nullptr;
+    mem = ringBuffer.peek(std::numeric_limits<AtomicRingBuffer::size_type>::max(), true);
     // Consume whatever there is left.
-    ASSERT_EQ(ringBuffer.peek(mem, std::numeric_limits<AtomicRingBuffer::size_type>::max(), true), 9);
+    ASSERT_EQ(mem.len, 9);
     EXPECT_EQ(ringBuffer.size(), 9);
-    ASSERT_NE(mem, nullptr);
-    ASSERT_EQ(ringBuffer.consume(mem, 9), 9);
+    ASSERT_NE(mem.ptr, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem), 9);
     EXPECT_EQ(ringBuffer.size(), 0);
   }
 }
 
 TEST_F(BufferedAtomicBufferFixture, FullCircle_ReadAtFirstWraparound) {
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-
-    ASSERT_EQ(ringBuffer.allocate(mem, kBufferSize, false), kBufferSize);
+    Mem mem = ringBuffer.allocate(kBufferSize, false);
+    ASSERT_EQ(mem.len, kBufferSize);
     EXPECT_EQ(ringBuffer.size(), 0);
     // Push so that the buffer is completely full
-    ASSERT_EQ(ringBuffer.publish(mem, kBufferSize), kBufferSize);
+    ASSERT_EQ(ringBuffer.publish(mem), kBufferSize);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
 
     // Consume 3 bytes
-    ASSERT_EQ(ringBuffer.consume(mem, 3), 3);
+    mem.len = 3;
+    ASSERT_EQ(ringBuffer.consume(mem), 3);
     EXPECT_EQ(ringBuffer.size(), 7);
 
     // Fill the buffer again by publishing another 3 bytes
-    ASSERT_EQ(ringBuffer.allocate(mem, 3, false), 3);
+    mem = ringBuffer.allocate(3, false);
+    ASSERT_EQ(mem.len, 3);
     EXPECT_EQ(ringBuffer.size(), 7);
-    ASSERT_EQ(ringBuffer.publish(mem, 3), 3);
+    ASSERT_EQ(ringBuffer.publish(mem), 3);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
   }
 
   {
-    AtomicRingBuffer::pointer_type mem = nullptr;
-
     // Consume as much as possible and expect 7 bytes
-    ASSERT_EQ(ringBuffer.peek(mem, std::numeric_limits<AtomicRingBuffer::size_type>::max(), true), 7);
+    Mem mem = ringBuffer.peek(std::numeric_limits<AtomicRingBuffer::size_type>::max(), true);
+    ASSERT_EQ(mem.len, 7);
     EXPECT_EQ(ringBuffer.size(), kBufferSize);
-    ASSERT_NE(mem, nullptr);
-    ASSERT_EQ(ringBuffer.consume(mem, 7), 7);
+    ASSERT_NE(mem.ptr, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem), 7);
     EXPECT_EQ(ringBuffer.size(), 3);
 
-    mem = nullptr;
+    mem = ringBuffer.peek(std::numeric_limits<AtomicRingBuffer::size_type>::max(), true);
     // Consume whatever there is left.
-    ASSERT_EQ(ringBuffer.peek(mem, std::numeric_limits<AtomicRingBuffer::size_type>::max(), true), 3);
+    ASSERT_EQ(mem.len, 3);
     EXPECT_EQ(ringBuffer.size(), 3);
-    ASSERT_NE(mem, nullptr);
-    ASSERT_EQ(ringBuffer.consume(mem, 3), 3);
+    ASSERT_NE(mem.ptr, nullptr);
+    ASSERT_EQ(ringBuffer.consume(mem), 3);
     EXPECT_EQ(ringBuffer.size(), 0);
   }
 }
@@ -271,18 +265,19 @@ TEST_F(BufferedAtomicBufferFixture, MassiveData) {
 
   EXPECT_EQ(ringBuffer.capacity(), 10);
 
-  AtomicRingBuffer::pointer_type mem = nullptr;
-  ASSERT_EQ(ringBuffer.allocate(mem, strlen(loremIpsum), true), 10);
+  Mem mem = ringBuffer.allocate(strlen(loremIpsum), true);
+  ASSERT_EQ(mem.len, 10);
 
   {
-    AtomicRingBuffer::pointer_type mem2 = nullptr;
-    EXPECT_EQ(ringBuffer.allocate(mem2, strlen(loremIpsum), true), 0);
+    Mem mem2 = ringBuffer.allocate(strlen(loremIpsum), true);
+    EXPECT_EQ(mem2.len, 0);
   }
 
-  memcpy(mem, loremIpsum, 10);
+  memcpy(mem.ptr, loremIpsum, 10);
 
-  EXPECT_EQ(ringBuffer.publish(mem, 10), 10);
-  EXPECT_EQ(ringBuffer.allocate(mem, strlen(loremIpsum), true), 0);
+  EXPECT_EQ(ringBuffer.publish(mem), 10);
+  mem = ringBuffer.allocate(strlen(loremIpsum), true);
+  EXPECT_EQ(mem.len, 0);
   EXPECT_EQ(ringBuffer.size(), 10);
 }
 

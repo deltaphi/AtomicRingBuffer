@@ -10,6 +10,8 @@ namespace AtomicRingBuffer {
 
 class NoBufferAtomicBufferFixture : public ::testing::Test {
  public:
+  using Mem = AtomicRingBuffer::MemoryRange;
+
   // void SetUp() {}
 
   // void TearDown() {}
@@ -37,26 +39,26 @@ class FilledAtomicBufferFixture : public BufferedAtomicBufferFixture {
  public:
   void SetUp() {
     BufferedAtomicBufferFixture::SetUp();
-    AtomicRingBuffer::pointer_type mem;
-    ASSERT_EQ(ringBuffer.allocate(mem, kInitialFill, false), kInitialFill);
-    ASSERT_NE(mem, nullptr);
+    Mem mem = ringBuffer.allocate(kInitialFill, false);
+    ASSERT_EQ(mem.len, kInitialFill);
+    ASSERT_NE(mem.ptr, nullptr);
 
     for (AtomicRingBuffer::size_type i = 0; i < kInitialFill; ++i) {
-      mem[i] = i;
+      mem.ptr[i] = i;
     }
 
-    ASSERT_EQ(ringBuffer.publish(mem, kInitialFill), kInitialFill);
+    ASSERT_EQ(ringBuffer.publish(mem), kInitialFill);
     ASSERT_EQ(ringBuffer.size(), kInitialFill);
   }
 
   // Read some bytes from the start of the buffer
   void consume5BytesAtStart() {
-    AtomicRingBuffer::pointer_type mem = nullptr;
+    Mem mem = ringBuffer.peek(5, false);
 
-    EXPECT_EQ(ringBuffer.peek(mem, 5, false), 5);
-    EXPECT_EQ(mem, buffer);
+    EXPECT_EQ(mem.len, 5);
+    EXPECT_EQ(mem.ptr, buffer);
 
-    ASSERT_EQ(ringBuffer.consume(mem, 5), 5);
+    ASSERT_EQ(ringBuffer.consume(mem), 5);
     ASSERT_EQ(ringBuffer.size(), 2);
   }
 
