@@ -5,6 +5,12 @@
 
 namespace AtomicRingBuffer {
 
+struct memcpyCharReplaceResult {
+  size_t len = 0;
+  char* nextByte = nullptr;
+  const char* partialReplace = nullptr;
+};
+
 /**
  * \brief Copy the contents of src (length srcLen) to dest (destLen) while replacing every occurrenct of search in src
  * with replace in dest.
@@ -33,8 +39,8 @@ namespace AtomicRingBuffer {
  * \returns The number of bytes that were consumed from src.
  *
  */
-size_t memcpyCharReplace(char*& dest, const char* src, char search, const char*& replace, size_t destLen,
-                         size_t srcLen);
+memcpyCharReplaceResult memcpyCharReplace(char* const dest, const char* const src, const char search,
+                                          const char* const replace, const size_t destLen, const size_t srcLen);
 
 }  // namespace AtomicRingBuffer
 

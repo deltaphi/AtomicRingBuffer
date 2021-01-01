@@ -4,12 +4,14 @@
 
 namespace AtomicRingBuffer {
 
-size_t memcpyCharReplace(char*& dest, const char* src, char search, const char*& replace, size_t destLen,
-                         size_t srcLen) {
+memcpyCharReplaceResult memcpyCharReplace(char* const dest, const char* const src, const char search,
+                                          const char* const replace, const size_t destLen, const size_t srcLen) {
+  memcpyCharReplaceResult result;
+
   // Check preconditions
   if (src == nullptr || dest == nullptr || srcLen == 0 || destLen == 0) {
     // Nothing to do.
-    return 0;
+    return result;
   }
 
   std::size_t readIdx = 0;
@@ -56,7 +58,7 @@ size_t memcpyCharReplace(char*& dest, const char* src, char search, const char*&
         bool resultPartiallyWritten = bytesToInsert != replaceLen;
         if (resultPartiallyWritten) {
           // Advance replace to the next unwritten byte
-          replace = &replace[bytesToInsert];
+          result.partialReplace = &replace[bytesToInsert];
         }
 
         // Then continue with the source byte afterwards.
@@ -67,8 +69,10 @@ size_t memcpyCharReplace(char*& dest, const char* src, char search, const char*&
   }
 
   // Setup return values
-  dest = &dest[writeIdx];
-  return readIdx;
+  result.len = readIdx;
+  result.nextByte = &dest[writeIdx];
+
+  return result;
 }
 
 }  // namespace AtomicRingBuffer
