@@ -43,7 +43,9 @@ class ObjectRingBuffer {
 
   size_type publish(const MemoryRange elemPtr) { return toNumElements(delegate.publish(convertMemoryRange(elemPtr))); }
 
-  MemoryRange peek(const size_type size = 1) { return convertMemoryRange(delegate.peek(toNumBytes(size), false)); }
+  const MemoryRange peek(const size_type size = 1) const {
+    return convertMemoryRange(delegate.peek(toNumBytes(size), false));
+  }
 
   size_type consume(const MemoryRange elemPtr) { return toNumElements(delegate.consume(convertMemoryRange(elemPtr))); }
 
