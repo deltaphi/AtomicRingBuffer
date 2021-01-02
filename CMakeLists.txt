@@ -62,6 +62,7 @@ add_executable(AtomicRingBufferTest
     "test/AtomicRingBufferTest.cpp"
     "test/WraparoundTests.cpp"
     "test/StringCopyHelperTest.cpp"
+    "test/ObjectRingBufferTest.cpp"
 )
 target_link_libraries(AtomicRingBufferTest gtest_main gmock)
 add_test(NAME gtest_AtomicRingBufferTest_test COMMAND AtomicRingBufferTest)

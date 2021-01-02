@@ -87,6 +87,8 @@ class AtomicRingBuffer {
     return bytesAvailable;
   }
 
+  bool empty() const { return readIdx_ == writeIdx_; }
+
  private:
   constexpr size_type beginIdx() const { return 0; }
   constexpr size_type endIdx() const { return bufferSize_; }

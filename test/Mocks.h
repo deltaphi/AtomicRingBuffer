@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 
 #include "AtomicRingBuffer/AtomicRingBuffer.h"
+#include "AtomicRingBuffer/ObjectRingBuffer.h"
 
 namespace AtomicRingBuffer {
 
@@ -63,6 +64,61 @@ class FilledAtomicBufferFixture : public BufferedAtomicBufferFixture {
   }
 
   constexpr static const AtomicRingBuffer::size_type kInitialFill = 7;
+};
+
+struct MyStruct {
+  float f;
+  uint16_t i;
+
+  bool operator==(const MyStruct& other) const { return f == other.f && i == other.i; }
+};
+
+class ObjectRingBuffer_NoBufferFixture : public ::testing::Test {
+ public:
+  void SetUp() { ASSERT_EQ(structBuffer.capacity(), 0); }
+
+  ObjectRingBuffer<MyStruct, 0> structBuffer;
+};
+
+class ObjectRingBufferFixture : public ::testing::Test {
+ public:
+  void SetUp() { ASSERT_EQ(structBuffer.capacity(), 3); }
+
+  template <typename T>
+  void publishElements(T elemsToPublish) {
+    for (std::size_t i = 0; i < elemsToPublish.size(); ++i) {
+      auto mem = structBuffer.allocate(1);
+      ASSERT_EQ(mem.len, 1) << "Elem Nr. " << i;
+      memcpy(mem.ptr, &elemsToPublish[i], sizeof(MyStruct));
+      EXPECT_EQ(structBuffer.publish(mem), 1);
+    }
+  }
+
+  template <typename T>
+  void consumeElements(T elemsToConsume) {
+    for (std::size_t i = 0; i < elemsToConsume.size(); ++i) {
+      auto mem = structBuffer.peek(1);
+      ASSERT_EQ(mem.len, 1);
+      EXPECT_EQ(*mem.ptr, elemsToConsume[i]) << "Elem Nr. " << i;
+      EXPECT_EQ(structBuffer.consume(mem), 1);
+    }
+  }
+
+  template <typename T>
+  void batchPublish(T elemsToPublish) {
+    auto mem = structBuffer.allocate(elemsToPublish.size());
+    EXPECT_EQ(mem.len, elemsToPublish.size());
+    ASSERT_NE(mem.ptr, nullptr);
+    memcpy(mem.ptr, elemsToPublish.data(), elemsToPublish.size() * sizeof(MyStruct));
+    EXPECT_EQ(structBuffer.publish(mem), elemsToPublish.size());
+  }
+
+  using StructBuffer_t = ObjectRingBuffer<MyStruct, 3>;
+
+  std::array<MyStruct, 4> demoElems = {MyStruct{3.141592654, 0xCAFE}, MyStruct{2.71828, 0xAFFE}, MyStruct{0.9, 0xFEFE},
+                                       MyStruct{42.4344, 0xABAB}};
+
+  StructBuffer_t structBuffer;
 };
 
 }  // namespace AtomicRingBuffer
