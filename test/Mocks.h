@@ -75,43 +75,45 @@ struct MyStruct {
   bool operator==(const MyStruct& other) const { return f == other.f && i == other.i; }
 };
 
+constexpr static const MyStruct demoElems[] = {MyStruct{3.141592654f, 0xCAFE}, MyStruct{2.71828f, 0xAFFE},
+                                               MyStruct{0.9f, 0xFEFE}, MyStruct{42.4344f, 0xABAB}};
+
+template <typename BufferT, typename ElemContainerT>
+void publishElements(BufferT& buffer, ElemContainerT elems) {
+  for (std::size_t i = 0; i < elems.size(); ++i) {
+    auto mem = buffer.allocate(1);
+    ASSERT_EQ(mem.len, 1) << "Elem Nr. " << i;
+    memcpy(mem.ptr, &elems[i], sizeof(MyStruct));
+    EXPECT_EQ(buffer.publish(mem), 1);
+  }
+}
+
+template <typename BufferT, typename ElemContainerT>
+void consumeElements(BufferT& buffer, ElemContainerT elems) {
+  for (std::size_t i = 0; i < elems.size(); ++i) {
+    auto mem = buffer.peek(1);
+    ASSERT_EQ(mem.len, 1);
+    EXPECT_EQ(*mem.ptr, elems[i]) << "Elem Nr. " << i;
+    EXPECT_EQ(buffer.consume(mem), 1);
+  }
+}
+
+template <typename BufferT, typename ElemContainerT>
+void batchPublish(BufferT& buffer, ElemContainerT elems) {
+  auto mem = buffer.allocate(elems.size());
+  EXPECT_EQ(mem.len, elems.size());
+  ASSERT_NE(mem.ptr, nullptr);
+  memcpy(mem.ptr, elems.data(), elems.size() * sizeof(MyStruct));
+  EXPECT_EQ(buffer.publish(mem), elems.size());
+}
+
 class ObjectRingBufferFixture : public ::testing::Test {
  public:
   void SetUp() { ASSERT_EQ(structBuffer.capacity(), 3); }
 
-  template <typename T>
-  void publishElements(T elemsToPublish) {
-    for (std::size_t i = 0; i < elemsToPublish.size(); ++i) {
-      auto mem = structBuffer.allocate(1);
-      ASSERT_EQ(mem.len, 1) << "Elem Nr. " << i;
-      memcpy(mem.ptr, &elemsToPublish[i], sizeof(MyStruct));
-      EXPECT_EQ(structBuffer.publish(mem), 1);
-    }
-  }
+  constexpr static const std::size_t kBufferCapacity = 3;
 
-  template <typename T>
-  void consumeElements(T elemsToConsume) {
-    for (std::size_t i = 0; i < elemsToConsume.size(); ++i) {
-      auto mem = structBuffer.peek(1);
-      ASSERT_EQ(mem.len, 1);
-      EXPECT_EQ(*mem.ptr, elemsToConsume[i]) << "Elem Nr. " << i;
-      EXPECT_EQ(structBuffer.consume(mem), 1);
-    }
-  }
-
-  template <typename T>
-  void batchPublish(T elemsToPublish) {
-    auto mem = structBuffer.allocate(elemsToPublish.size());
-    EXPECT_EQ(mem.len, elemsToPublish.size());
-    ASSERT_NE(mem.ptr, nullptr);
-    memcpy(mem.ptr, elemsToPublish.data(), elemsToPublish.size() * sizeof(MyStruct));
-    EXPECT_EQ(structBuffer.publish(mem), elemsToPublish.size());
-  }
-
-  using StructBuffer_t = ObjectRingBuffer<MyStruct, 3>;
-
-  std::array<MyStruct, 4> demoElems = {MyStruct{3.141592654f, 0xCAFE}, MyStruct{2.71828f, 0xAFFE},
-                                       MyStruct{0.9f, 0xFEFE}, MyStruct{42.4344f, 0xABAB}};
+  using StructBuffer_t = ObjectRingBuffer<MyStruct, kBufferCapacity>;
 
   StructBuffer_t structBuffer;
 };

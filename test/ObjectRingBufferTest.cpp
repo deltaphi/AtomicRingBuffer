@@ -55,7 +55,7 @@ TEST_F(ObjectRingBufferFixture, AfterOnePublish_ConsumeOne_IsEmpty) {
 TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeOne_CorrectElement_IsNotEmpty) {
   std::array<MyStruct, 2> elems = {demoElems[0], demoElems[1]};
 
-  publishElements(elems);
+  publishElements(structBuffer, elems);
 
   auto peek = structBuffer.peek(1);
   EXPECT_EQ(structBuffer.consume(peek), 1);
@@ -67,7 +67,7 @@ TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeOne_CorrectElement_IsNotE
 TEST_F(ObjectRingBufferFixture, AfterTwoPublish_SizeIs2) {
   std::array<MyStruct, 2> elems = {demoElems[0], demoElems[1]};
 
-  publishElements(elems);
+  publishElements(structBuffer, elems);
 
   EXPECT_EQ(structBuffer.size(), 2);
   EXPECT_FALSE(structBuffer.empty());
@@ -76,9 +76,9 @@ TEST_F(ObjectRingBufferFixture, AfterTwoPublish_SizeIs2) {
 TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeTwo_CorrectElements_IsEmpty) {
   std::array<MyStruct, 2> elems = {demoElems[0], demoElems[1]};
 
-  publishElements(elems);
+  publishElements(structBuffer, elems);
 
-  consumeElements(elems);
+  consumeElements(structBuffer, elems);
 
   EXPECT_EQ(structBuffer.size(), 0);
   EXPECT_TRUE(structBuffer.empty());
@@ -100,7 +100,7 @@ TEST_F(ObjectRingBufferFixture, AfterThreeAllocate_RejectAllocate) {
 TEST_F(ObjectRingBufferFixture, BatchPublishThree) {
   std::array<MyStruct, 3> elems = {demoElems[0], demoElems[1], demoElems[2]};
 
-  batchPublish(elems);
+  batchPublish(structBuffer, elems);
 
   EXPECT_EQ(structBuffer.size(), 3);
 }
@@ -108,28 +108,28 @@ TEST_F(ObjectRingBufferFixture, BatchPublishThree) {
 TEST_F(ObjectRingBufferFixture, AfterThreePublish_ConsumeOne_PublishOne_ConsumeTwo_ConsumeOne) {
   std::array<MyStruct, 3> elems = {demoElems[0], demoElems[1], demoElems[2]};
 
-  batchPublish(elems);
+  batchPublish(structBuffer, elems);
 
   {
     std::array<MyStruct, 1> elem = {demoElems[0]};
-    consumeElements(elem);
+    consumeElements(structBuffer, elem);
   }
   EXPECT_EQ(structBuffer.size(), 2);
 
   {
     std::array<MyStruct, 1> elem4 = {demoElems[4]};
-    publishElements(elem4);
+    publishElements(structBuffer, elem4);
 
     std::array<MyStruct, 2> elem2_3 = {demoElems[1], demoElems[2]};
-    consumeElements(elem2_3);
-    consumeElements(elem4);
+    consumeElements(structBuffer, elem2_3);
+    consumeElements(structBuffer, elem4);
   }
 }
 
 TEST_F(ObjectRingBufferFixture, AfterTwoPublish_PeekThree_Rejected) {
   std::array<MyStruct, 2> elems = {demoElems[0], demoElems[1]};
 
-  batchPublish(elems);
+  batchPublish(structBuffer, elems);
 
   auto mem = structBuffer.peek(3);
 
