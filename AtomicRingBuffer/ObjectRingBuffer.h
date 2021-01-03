@@ -58,7 +58,7 @@ class ObjectRingBuffer {
  private:
   constexpr static const size_type kByteBufferSize = ObjectRingBuffer::toNumBytes(elemCapacity);
 
-  using ByteBuffer_t = alignas(buffer_element_type) uint8_t[kByteBufferSize];
+  using ByteBuffer_t = uint8_t[kByteBufferSize];
 
   constexpr static MemoryRange convertMemoryRange(const Delegate_t::MemoryRange& delegateRange) {
     const auto len = toNumElements(delegateRange.len);
@@ -69,7 +69,7 @@ class ObjectRingBuffer {
     return Delegate_t::MemoryRange{reinterpret_cast<Delegate_t::pointer_type>(myRange.ptr), toNumBytes(myRange.len)};
   }
 
-  ByteBuffer_t bytebuffer;
+  ByteBuffer_t bytebuffer alignas(buffer_element_type);
 
   Delegate_t delegate;
 };
