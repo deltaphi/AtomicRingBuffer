@@ -6,15 +6,6 @@
 
 namespace AtomicRingBuffer {
 
-TEST_F(ObjectRingBuffer_NoBufferFixture, EmptyBufferIsEmpty) { EXPECT_TRUE(structBuffer.empty()); }
-
-TEST_F(ObjectRingBuffer_NoBufferFixture, AfterOneAllocate_IsNull) {
-  auto mem = structBuffer.allocate(1);
-  EXPECT_EQ(mem.ptr, nullptr);
-  EXPECT_EQ(mem.len, 0);
-  EXPECT_TRUE(structBuffer.empty());
-}
-
 TEST_F(ObjectRingBufferFixture, NewBufferIsEmpty) { EXPECT_TRUE(structBuffer.empty()); }
 
 TEST_F(ObjectRingBufferFixture, NewBufferHasSize0) { EXPECT_EQ(structBuffer.size(), 0); }
@@ -40,22 +31,20 @@ TEST_F(ObjectRingBufferFixture, AfterOnePublish_IsNotEmpty) {
 }
 
 TEST_F(ObjectRingBufferFixture, AfterOnePublish_PeekOne) {
-  MyStruct elem{3.141592654, 0xFFFF};
   auto mem = structBuffer.allocate(1);
-  memcpy(mem.ptr, &elem, mem.len * sizeof(elem));
+  memcpy(mem.ptr, &demoElems[0], mem.len * sizeof(demoElems[0]));
   EXPECT_EQ(structBuffer.publish(mem), 1);
 
   auto peek = structBuffer.peek(1);
   EXPECT_EQ(peek.ptr, mem.ptr);
   EXPECT_EQ(peek.len, 1);
-  EXPECT_EQ(*peek.ptr, elem);
+  EXPECT_EQ(*peek.ptr, demoElems[0]);
 }
 
 TEST_F(ObjectRingBufferFixture, AfterOnePublish_ConsumeOne_IsEmpty) {
-  MyStruct elem{3.141592654, 0xFFFF};
   auto mem = structBuffer.allocate(1);
   ASSERT_EQ(mem.len, 1);
-  memcpy(mem.ptr, &elem, sizeof(elem));
+  memcpy(mem.ptr, &demoElems[0], sizeof(demoElems[0]));
   EXPECT_EQ(structBuffer.publish(mem), 1);
 
   EXPECT_EQ(structBuffer.consume(mem), 1);
@@ -64,7 +53,7 @@ TEST_F(ObjectRingBufferFixture, AfterOnePublish_ConsumeOne_IsEmpty) {
 }
 
 TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeOne_CorrectElement_IsNotEmpty) {
-  std::array<MyStruct, 2> elems = {MyStruct{3.141592654, 0xCAFE}, MyStruct{2.71828, 0xAFFE}};
+  std::array<MyStruct, 2> elems = {demoElems[0], demoElems[1]};
 
   publishElements(elems);
 
@@ -76,7 +65,7 @@ TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeOne_CorrectElement_IsNotE
 }
 
 TEST_F(ObjectRingBufferFixture, AfterTwoPublish_SizeIs2) {
-  std::array<MyStruct, 2> elems = {MyStruct{3.141592654, 0xCAFE}, MyStruct{2.71828, 0xAFFE}};
+  std::array<MyStruct, 2> elems = {demoElems[0], demoElems[1]};
 
   publishElements(elems);
 
@@ -85,7 +74,7 @@ TEST_F(ObjectRingBufferFixture, AfterTwoPublish_SizeIs2) {
 }
 
 TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeTwo_CorrectElements_IsEmpty) {
-  std::array<MyStruct, 2> elems = {MyStruct{3.141592654, 0xCAFE}, MyStruct{2.71828, 0xAFFE}};
+  std::array<MyStruct, 2> elems = {demoElems[0], demoElems[1]};
 
   publishElements(elems);
 
@@ -109,7 +98,7 @@ TEST_F(ObjectRingBufferFixture, AfterThreeAllocate_RejectAllocate) {
 }
 
 TEST_F(ObjectRingBufferFixture, BatchPublishThree) {
-  std::array<MyStruct, 3> elems = {MyStruct{3.141592654, 0xCAFE}, MyStruct{2.71828, 0xAFFE}, MyStruct{0.9, 0xFEFE}};
+  std::array<MyStruct, 3> elems = {demoElems[0], demoElems[1], demoElems[2]};
 
   batchPublish(elems);
 

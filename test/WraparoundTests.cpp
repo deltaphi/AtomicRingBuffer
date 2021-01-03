@@ -103,9 +103,9 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
       EXPECT_EQ(ringBuffer.size(), sendData - readData);
 
       for (AtomicRingBuffer::size_type j = 0; j < mem.len; ++j) {
-        mem.ptr[j] = sendData + j;
+        mem.ptr[j] = static_cast<AtomicRingBuffer::value_type>(sendData + j);
       }
-      sendData += mem.len;
+      sendData += static_cast<AtomicRingBuffer::value_type>(mem.len);
 
       ASSERT_EQ(ringBuffer.publish(mem), mem.len) << "Error publishing at byte " << static_cast<uint16_t>(sendData);
       EXPECT_EQ(ringBuffer.size(), sendData - readData);
@@ -122,7 +122,7 @@ TEST_F(BufferedAtomicBufferFixture, FullCircle_ManyBytes) {
       for (AtomicRingBuffer::size_type j = 0; j < mem.len; ++j) {
         EXPECT_EQ(mem.ptr[j], j + readData) << "Error reading at byte " << static_cast<uint16_t>(readData);
       }
-      readData += mem.len;
+      readData += static_cast<AtomicRingBuffer::value_type>(mem.len);
 
       ASSERT_EQ(ringBuffer.consume(mem), mem.len) << "Error consuming at byte " << static_cast<uint16_t>(readData);
       EXPECT_EQ(ringBuffer.size(), sendData - readData);

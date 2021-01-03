@@ -4,6 +4,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include <array>
+
 #include "AtomicRingBuffer/AtomicRingBuffer.h"
 #include "AtomicRingBuffer/ObjectRingBuffer.h"
 
@@ -45,7 +47,7 @@ class FilledAtomicBufferFixture : public BufferedAtomicBufferFixture {
     ASSERT_NE(mem.ptr, nullptr);
 
     for (AtomicRingBuffer::size_type i = 0; i < kInitialFill; ++i) {
-      mem.ptr[i] = i;
+      mem.ptr[i] = static_cast<AtomicRingBuffer::value_type>(i);
     }
 
     ASSERT_EQ(ringBuffer.publish(mem), kInitialFill);
@@ -71,13 +73,6 @@ struct MyStruct {
   uint16_t i;
 
   bool operator==(const MyStruct& other) const { return f == other.f && i == other.i; }
-};
-
-class ObjectRingBuffer_NoBufferFixture : public ::testing::Test {
- public:
-  void SetUp() { ASSERT_EQ(structBuffer.capacity(), 0); }
-
-  ObjectRingBuffer<MyStruct, 0> structBuffer;
 };
 
 class ObjectRingBufferFixture : public ::testing::Test {
@@ -115,8 +110,8 @@ class ObjectRingBufferFixture : public ::testing::Test {
 
   using StructBuffer_t = ObjectRingBuffer<MyStruct, 3>;
 
-  std::array<MyStruct, 4> demoElems = {MyStruct{3.141592654, 0xCAFE}, MyStruct{2.71828, 0xAFFE}, MyStruct{0.9, 0xFEFE},
-                                       MyStruct{42.4344, 0xABAB}};
+  std::array<MyStruct, 4> demoElems = {MyStruct{3.141592654f, 0xCAFE}, MyStruct{2.71828f, 0xAFFE},
+                                       MyStruct{0.9f, 0xFEFE}, MyStruct{42.4344f, 0xABAB}};
 
   StructBuffer_t structBuffer;
 };

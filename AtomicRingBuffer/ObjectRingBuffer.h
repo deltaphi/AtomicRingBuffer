@@ -11,6 +11,8 @@ namespace AtomicRingBuffer {
 template <typename T, uint16_t elemCapacity>
 class ObjectRingBuffer {
  public:
+  static_assert(elemCapacity > 0, "Cannot have Buffer with 0 capacity.");
+
   using Delegate_t = AtomicRingBuffer;
   using size_type = Delegate_t::size_type;
   using value_type = T;
