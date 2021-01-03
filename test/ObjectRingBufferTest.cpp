@@ -11,38 +11,38 @@ TEST_F(ObjectRingBufferFixture, NewBufferIsEmpty) { EXPECT_TRUE(structBuffer.emp
 TEST_F(ObjectRingBufferFixture, NewBufferHasSize0) { EXPECT_EQ(structBuffer.size(), 0); }
 
 TEST_F(ObjectRingBufferFixture, AfterOneAllocate_IsEmpty) {
-  structBuffer.allocate(1);
+  structBuffer.allocate();
   EXPECT_TRUE(structBuffer.empty());
 }
 
 TEST_F(ObjectRingBufferFixture, AfterOneAllocate_IsNotNull) {
   EXPECT_GE(structBuffer.capacity(), 1);
-  auto mem = structBuffer.allocate(1);
+  auto mem = structBuffer.allocate();
   EXPECT_NE(mem.ptr, nullptr);
   EXPECT_EQ(mem.len, 1);
   EXPECT_TRUE(structBuffer.empty());
 }
 
 TEST_F(ObjectRingBufferFixture, AfterOnePublish_IsNotEmpty) {
-  auto mem = structBuffer.allocate(1);
+  auto mem = structBuffer.allocate();
   EXPECT_EQ(structBuffer.publish(mem), 1);
   EXPECT_FALSE(structBuffer.empty());
   EXPECT_EQ(structBuffer.size(), 1);
 }
 
 TEST_F(ObjectRingBufferFixture, AfterOnePublish_PeekOne) {
-  auto mem = structBuffer.allocate(1);
+  auto mem = structBuffer.allocate();
   memcpy(mem.ptr, &demoElems[0], mem.len * sizeof(demoElems[0]));
   EXPECT_EQ(structBuffer.publish(mem), 1);
 
-  auto peek = structBuffer.peek(1);
+  auto peek = structBuffer.peek();
   EXPECT_EQ(peek.ptr, mem.ptr);
   EXPECT_EQ(peek.len, 1);
   EXPECT_EQ(*peek.ptr, demoElems[0]);
 }
 
 TEST_F(ObjectRingBufferFixture, AfterOnePublish_ConsumeOne_IsEmpty) {
-  auto mem = structBuffer.allocate(1);
+  auto mem = structBuffer.allocate();
   ASSERT_EQ(mem.len, 1);
   memcpy(mem.ptr, &demoElems[0], sizeof(demoElems[0]));
   EXPECT_EQ(structBuffer.publish(mem), 1);
@@ -57,7 +57,7 @@ TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeOne_CorrectElement_IsNotE
 
   publishElements(structBuffer, elems);
 
-  auto peek = structBuffer.peek(1);
+  auto peek = structBuffer.peek();
   EXPECT_EQ(structBuffer.consume(peek), 1);
 
   EXPECT_EQ(structBuffer.size(), 1);
@@ -85,30 +85,22 @@ TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeTwo_CorrectElements_IsEmp
 }
 
 TEST_F(ObjectRingBufferFixture, AfterThreeAllocate_RejectAllocate) {
-  {
-    auto mem = structBuffer.allocate(3);
+  for (std::size_t i = 0; i < kBufferCapacity; ++i) {
+    auto mem = structBuffer.allocate();
     EXPECT_NE(mem.ptr, nullptr);
-    EXPECT_EQ(mem.len, 3);
+    EXPECT_EQ(mem.len, 1);
   }
 
   {
-    auto mem = structBuffer.allocate(1);
+    auto mem = structBuffer.allocate();
     EXPECT_EQ(mem, StructBuffer_t::MemoryRange{});
   }
-}
-
-TEST_F(ObjectRingBufferFixture, BatchPublishThree) {
-  std::array<MyStruct, 3> elems = {demoElems[0], demoElems[1], demoElems[2]};
-
-  batchPublish(structBuffer, elems);
-
-  EXPECT_EQ(structBuffer.size(), 3);
 }
 
 TEST_F(ObjectRingBufferFixture, AfterThreePublish_ConsumeOne_PublishOne_ConsumeTwo_ConsumeOne) {
   std::array<MyStruct, 3> elems = {demoElems[0], demoElems[1], demoElems[2]};
 
-  batchPublish(structBuffer, elems);
+  publishElements(structBuffer, elems);
 
   {
     std::array<MyStruct, 1> elem = {demoElems[0]};
@@ -126,13 +118,13 @@ TEST_F(ObjectRingBufferFixture, AfterThreePublish_ConsumeOne_PublishOne_ConsumeT
   }
 }
 
-TEST_F(ObjectRingBufferFixture, AfterTwoPublish_PeekThree_Rejected) {
+TEST_F(ObjectRingBufferFixture, AfterTwoPublish_ConsumeTwo_PeekRejected) {
   std::array<MyStruct, 2> elems = {demoElems[0], demoElems[1]};
 
-  batchPublish(structBuffer, elems);
+  publishElements(structBuffer, elems);
+  consumeElements(structBuffer, elems);
 
-  auto mem = structBuffer.peek(3);
-
+  auto mem = structBuffer.peek();
   EXPECT_EQ(mem.ptr, nullptr);
   EXPECT_EQ(mem.len, 0);
 }

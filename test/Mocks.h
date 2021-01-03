@@ -81,7 +81,7 @@ constexpr static const MyStruct demoElems[] = {MyStruct{3.141592654f, 0xCAFE}, M
 template <typename BufferT, typename ElemContainerT>
 void publishElements(BufferT& buffer, ElemContainerT elems) {
   for (std::size_t i = 0; i < elems.size(); ++i) {
-    auto mem = buffer.allocate(1);
+    auto mem = buffer.allocate();
     ASSERT_EQ(mem.len, 1) << "Elem Nr. " << i;
     memcpy(mem.ptr, &elems[i], sizeof(MyStruct));
     EXPECT_EQ(buffer.publish(mem), 1);
@@ -91,20 +91,11 @@ void publishElements(BufferT& buffer, ElemContainerT elems) {
 template <typename BufferT, typename ElemContainerT>
 void consumeElements(BufferT& buffer, ElemContainerT elems) {
   for (std::size_t i = 0; i < elems.size(); ++i) {
-    auto mem = buffer.peek(1);
+    auto mem = buffer.peek();
     ASSERT_EQ(mem.len, 1);
     EXPECT_EQ(*mem.ptr, elems[i]) << "Elem Nr. " << i;
     EXPECT_EQ(buffer.consume(mem), 1);
   }
-}
-
-template <typename BufferT, typename ElemContainerT>
-void batchPublish(BufferT& buffer, ElemContainerT elems) {
-  auto mem = buffer.allocate(elems.size());
-  EXPECT_EQ(mem.len, elems.size());
-  ASSERT_NE(mem.ptr, nullptr);
-  memcpy(mem.ptr, elems.data(), elems.size() * sizeof(MyStruct));
-  EXPECT_EQ(buffer.publish(mem), elems.size());
 }
 
 class ObjectRingBufferFixture : public ::testing::Test {

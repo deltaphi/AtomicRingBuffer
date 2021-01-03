@@ -68,6 +68,11 @@ target_link_libraries(AtomicRingBufferTest gtest_main gmock)
 add_test(NAME gtest_AtomicRingBufferTest_test COMMAND AtomicRingBufferTest)
 target_compile_features(AtomicRingBufferTest PRIVATE cxx_std_14)
 
+if (MSVC)
+    # Define for C2338 of MSVC.
+    target_compile_definitions(AtomicRingBufferTest PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE)
+endif()
+
 if (ENABLE_COVERAGE)
 setup_target_for_coverage_gcovr_html(
   NAME AtomicRingBufferTest-gcovr
