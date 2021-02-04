@@ -109,7 +109,7 @@ TEST_F(ObjectRingBufferFixture, AfterThreePublish_ConsumeOne_PublishOne_ConsumeT
   EXPECT_EQ(structBuffer.size(), 2);
 
   {
-    std::array<MyStruct, 1> elem4 = {demoElems[4]};
+    std::array<MyStruct, 1> elem4 = {demoElems[3]};
     publishElements(structBuffer, elem4);
 
     std::array<MyStruct, 2> elem2_3 = {demoElems[1], demoElems[2]};
