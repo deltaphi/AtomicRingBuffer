@@ -39,7 +39,7 @@ struct memcpyCharReplaceResult {
  * \returns The number of bytes that were consumed from src.
  *
  */
-memcpyCharReplaceResult memcpyCharReplace(char* const dest, const char* const src, const char search,
+memcpyCharReplaceResult memcpyCharReplace(char* dest, const char* src, const char search,
                                           const char* const replace, const size_t destLen, const size_t srcLen);
 
 }  // namespace AtomicRingBuffer
