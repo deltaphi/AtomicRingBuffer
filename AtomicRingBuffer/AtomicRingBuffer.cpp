@@ -15,20 +15,17 @@ AtomicRingBuffer::size_type AtomicRingBuffer::bytesToPointerOrBufferEnd(const si
   size_type upperBytesUsed = bytesRemainingInBuffer(upper);
 
   // Figure out whether the memory managed by upper eats into the bytesAvailable
-  if (upperBytesUsed < bytesAvailable) {
-    bytesAvailable -= upperBytesUsed;
-  } else if (!isInside && upperBytesUsed == bytesAvailable && !sameSection(lower, upper)) {
-    bytesAvailable -= upperBytesUsed;
-  } else if (isInside && lower == upper) {
+  if ((upperBytesUsed < bytesAvailable) ||
+      (!isInside && upperBytesUsed == bytesAvailable && !sameSection(lower, upper)) || (isInside && lower == upper)) {
     bytesAvailable -= upperBytesUsed;
   }
   return bytesAvailable;
 }
 
-AtomicRingBuffer::MemoryRange AtomicRingBuffer::allocate(size_type len, bool partial_acceptable) {
+AtomicRingBuffer::MemoryRange AtomicRingBuffer::allocate(size_type numElems, bool partial_acceptable) {
   // Find how many bytes can be allocated
   size_type origAllocateIdx = allocateIdx_;
-  MemoryRange allocatedMemory = allocate(origAllocateIdx, readIdx_, false, len, partial_acceptable);
+  MemoryRange allocatedMemory = allocate(origAllocateIdx, readIdx_, false, numElems, partial_acceptable);
 
   // Make the allocation
   size_type newAllocateIdx = origAllocateIdx + allocatedMemory.len;
@@ -36,9 +33,8 @@ AtomicRingBuffer::MemoryRange AtomicRingBuffer::allocate(size_type len, bool par
 
   if (newAllocateIdx != origAllocateIdx &&
       allocateIdx_.compare_exchange_strong(origAllocateIdx, newAllocateIdx, std::memory_order_acq_rel)) {
-    origAllocateIdx = wrapToBufferIdx(origAllocateIdx);
   } else {
-    allocatedMemory.ptr = 0;
+    allocatedMemory.ptr = nullptr;
     allocatedMemory.len = 0;
   }
   return allocatedMemory;
@@ -50,16 +46,14 @@ AtomicRingBuffer::MemoryRange AtomicRingBuffer::allocate(const size_type section
   MemoryRange memory;
   size_type dataAvailable = bytesToPointerOrBufferEnd(sectionBegin, sectionEnd, isInside);
 
-  if (dataAvailable == 0) {
-    return memory;
-  } else {
+  if (dataAvailable != 0) {
     size_type dataStartIdx = wrapToBufferIdx(sectionBegin);
     if (dataAvailable >= len || partial_acceptable) {
       memory.len = min(len, dataAvailable);
       memory.ptr = &buffer_[dataStartIdx];
     }
-    return memory;
   }
+  return memory;
 }
 
 AtomicRingBuffer::size_type AtomicRingBuffer::commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd,

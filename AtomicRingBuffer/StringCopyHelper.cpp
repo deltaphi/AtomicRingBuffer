@@ -23,12 +23,14 @@ memcpyCharReplaceResult memcpyCharReplace(char* const dest, const char* const sr
   const char* nextSearchOccurence = src;
 
   while (writeIdx < destLen && readIdx < srcLen) {
-    nextSearchOccurence = static_cast<const char*>(memchr(nextSearchOccurence, search, srcLen - readIdx));
+    if (nextSearchOccurence != nullptr) {
+      nextSearchOccurence = static_cast<const char*>(memchr(nextSearchOccurence, search, srcLen - readIdx));
+    }
 
     // Copy over all data from readIdx until a position where search was found or until the end of src, otherwise.
     // Copy is limited to the length of the output buffer.
     {
-      std::size_t bytesToTransfer;
+      std::size_t bytesToTransfer = 0;
 
       if (nextSearchOccurence == nullptr) {
         // If search has not been found, consume from readIdx until the end.
@@ -51,7 +53,9 @@ memcpyCharReplaceResult memcpyCharReplace(char* const dest, const char* const sr
       if (bytesRemainingInBuffer > 0) {
         std::size_t bytesToInsert = std::min(replaceLen, bytesRemainingInBuffer);
 
-        memcpy(&dest[writeIdx], replace, bytesToInsert);
+        if (bytesToInsert > 0) {
+          memcpy(&dest[writeIdx], replace, bytesToInsert);
+        }
 
         writeIdx += bytesToInsert;
 
