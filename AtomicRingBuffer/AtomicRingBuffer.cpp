@@ -74,12 +74,9 @@ AtomicRingBuffer::size_type AtomicRingBuffer::commit(atomic_size_type &sectionBe
     // Check if the memory to be published was previously allocated.
     if (sectionBegin.compare_exchange_strong(currentWriteIdx, newIdx, std::memory_order_acq_rel)) {
       return commitedLen;
-    } else {
-      return 0;
     }
-  } else {
-    return 0;
   }
+  return 0;
 }
 
 }  // namespace AtomicRingBuffer
