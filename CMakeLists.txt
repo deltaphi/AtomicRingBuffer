@@ -16,6 +16,8 @@ if (ENABLE_COVERAGE)
     append_coverage_compiler_flags()
 endif()
 
+find_program(CLANG_TIDY_EXECUTABLE clang-tidy)
+
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -67,6 +69,10 @@ add_executable(AtomicRingBufferTest
 target_link_libraries(AtomicRingBufferTest gtest_main gmock)
 add_test(NAME gtest_AtomicRingBufferTest_test COMMAND AtomicRingBufferTest)
 target_compile_features(AtomicRingBufferTest PRIVATE cxx_std_14)
+
+if (CLANG_TIDY_EXECUTABLE)
+    set_target_properties(AtomicRingBufferTest PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-checks=*,-llvmlibc-callee-namespace,-modernize-use-trailing-return-type,-fuchsia-trailing-return,-llvmlibc-implementation-in-namespace,-llvmlibc-restrict-system-libc-headers")
+endif()
 
 if (MSVC)
     # Define for C2338 of MSVC.
