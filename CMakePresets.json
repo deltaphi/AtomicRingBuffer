@@ -16,6 +16,10 @@
         {
             "name": "build-Windows",
             "configurePreset": "Windows"
+        },
+        {
+            "name": "build-Linux",
+            "configurePreset": "Linux"
         }
     ]
 }

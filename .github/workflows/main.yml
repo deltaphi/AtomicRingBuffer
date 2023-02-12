@@ -31,6 +31,7 @@ jobs:
         #cmakeListsOrSettingsJson: CMakeListsTxtBasic
         cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
         configurePreset: 'Linux'
+        buildPreset: 'build-Linux'
         #cmakeBuildType: Release
         #buildDirectory: ${{ runner.temp }}/build
         #buildWithCMake: true
