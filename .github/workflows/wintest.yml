@@ -38,11 +38,9 @@ jobs:
 
 
     # Actual testing happening
-    #- name: Examine Output
-    #  run: |
-    #      dir ${{ github.workspace }} ;
-    #      dir ${{ github.workspace }}\AtomicRingBuffer\ ;
-    #      dir ${{ runner.temp }}\build\ ;
+    - name: Examine Output
+      run: |
+          dir -Recurse ${{ github.workspace }}
 
 
     # Actual testing happening
