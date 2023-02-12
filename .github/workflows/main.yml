@@ -35,6 +35,13 @@ jobs:
         #buildDirectory: ${{ runner.temp }}/build
         #buildWithCMake: true
 
+
+    - name: Examine Output
+      run: |
+          ls ${{ github.workspace }} ;
+          ls ${{ github.workspace }}\build\ ;
+          ls ${{ runner.temp }}\build\ ;
+
     # Actual testing happening
     - name: Run Unittest
       run: ${{ runner.temp }}/build/AtomicRingBufferTest

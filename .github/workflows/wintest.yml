@@ -41,7 +41,7 @@ jobs:
     - name: Examine Output
       run: |
           dir ${{ github.workspace }} ;
-          dir ${{ github.workspace }}\build\ ;
+          dir ${{ github.workspace }}\AtomicRingBuffer\ ;
           dir ${{ runner.temp }}\build\ ;
 
 
