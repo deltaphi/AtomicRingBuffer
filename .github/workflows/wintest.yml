@@ -47,4 +47,4 @@ jobs:
 
     # Actual testing happening
     - name: Run Unittest
-      run: ${{ runner.temp }}\build\Release\AtomicRingBufferTest.exe
+      run: ${{ github.workspace }}\build\Release\AtomicRingBufferTest.exe
