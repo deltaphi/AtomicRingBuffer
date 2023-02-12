@@ -38,9 +38,8 @@ jobs:
 
     - name: Examine Output
       run: |
-          ls ${{ github.workspace }} ;
-          ls ${{ github.workspace }}\build\ ;
-          ls ${{ runner.temp }}\build\ ;
+          ls -Rl ${{ github.workspace }} ;
+          ls -Rl ${{ runner.temp }}\build\ ;
 
     # Actual testing happening
     - name: Run Unittest
