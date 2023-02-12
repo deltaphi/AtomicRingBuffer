@@ -14,7 +14,8 @@
     ],
     "buildPresets": [
         {
-            "name": "build"
+            "name": "build-windows",
+            "configurePreset": "Windows"
         }
     ]
 }
