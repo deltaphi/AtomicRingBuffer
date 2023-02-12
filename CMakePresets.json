@@ -11,5 +11,10 @@
             "name": "Linux",
             "binaryDir": "build"
         }
+    ],
+    "buildPresets": [
+        {
+            "name": "build"
+        }
     ]
 }

@@ -35,6 +35,7 @@ jobs:
         #buildDirectory: ${{ runner.temp }}/build
         #buildWithCMake: true
         configurePreset: 'Windows'
+        buildPreset: 'build'
 
 
     # Actual testing happening
