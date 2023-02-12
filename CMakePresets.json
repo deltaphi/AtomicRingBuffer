@@ -1,13 +1,15 @@
 {
-    "version": 6,
+    "version": 4,
     "configurePresets": [
         {
             "name": "Windows",
             "generator": "Visual Studio 17 2022",
-            "architecture": "x64"
+            "architecture": "x64",
+            "binaryDir": "build"
         },
         {
-            "name": "Linux"
+            "name": "Linux",
+            "binaryDir": "build"
         }
     ]
 }
