@@ -7,8 +7,7 @@
             "architecture": "x64"
         },
         {
-            "name": "Linux",
-            "architecture": "x64"
+            "name": "Linux"
         }
     ]
 }
