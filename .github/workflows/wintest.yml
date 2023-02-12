@@ -40,8 +40,9 @@ jobs:
     # Actual testing happening
     - name: Examine Output
       run: |
-          dir ${{ runner.temp }}\build\
-          dir ${{ github.workspace }}
+          dir ${{ github.workspace }} ;
+          dir ${{ github.workspace }}\build\ ;
+          dir ${{ runner.temp }}\build\ ;
 
 
     # Actual testing happening
