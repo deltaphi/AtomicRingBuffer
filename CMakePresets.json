@@ -15,7 +15,8 @@
     "buildPresets": [
         {
             "name": "build-Windows",
-            "configurePreset": "Windows"
+            "configurePreset": "Windows",
+            "configuration": "Release"
         },
         {
             "name": "build-Linux",
