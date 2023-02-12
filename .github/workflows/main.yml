@@ -36,10 +36,10 @@ jobs:
         #buildWithCMake: true
 
 
-    - name: Examine Output
-      run: |
-          ls -Rl ${{ github.workspace }} ;
-          ls -Rl ${{ runner.temp }}\build\ ;
+    #- name: Examine Output
+    #  run: |
+    #      ls -Rl ${{ github.workspace }} ;
+    #      ls -Rl ${{ runner.temp }}\build\ ;
 
     # Actual testing happening
     - name: Run Unittest
