@@ -43,4 +43,4 @@ jobs:
 
     # Actual testing happening
     - name: Run Unittest
-      run: ${{ runner.temp }}/build/AtomicRingBufferTest
+      run: ${{ github.workspace }}/build/AtomicRingBufferTest
