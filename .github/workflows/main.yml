@@ -24,13 +24,18 @@ jobs:
       with:
         submodules: true
 
-    # Runs a single command using the runners shell
-    - uses: lukka/run-cmake@v10.3
+    - uses: bazel-contrib/setup-bazel@0.9.1
       with:
-        cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
-        configurePreset: 'Linux'
-        buildPreset: 'build-Linux'
+        # Avoid downloading Bazel every time.
+        bazelisk-cache: true
+        # Store build cache per workflow.
+        disk-cache: ${{ github.workflow }}
+        # Share repository cache between workflows.
+        repository-cache: true
+
+    - name: Build with Bazel
+      run: bazel build //:AtomicRingBuffer_Test
 
     # Actual testing happening
     - name: Run Unittest
-      run: ${{ github.workspace }}/build/AtomicRingBufferTest
+      run: bazel test --test_output=all //:AtomicRingBuffer_Test
