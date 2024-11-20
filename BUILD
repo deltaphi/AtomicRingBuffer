@@ -1,16 +1,9 @@
-#config_setting(
- #   name = "msvc",
- #   value = {
- #       "compiler": "msvc",
- #   },
-#)
-
 cc_library(
     name = "AtomicRingBuffer",
     srcs = glob(["AtomicRingBuffer/*.cpp"]),
     hdrs = glob(["AtomicRingBuffer/*.h"]),
     copts = select({
-        "@platforms//os:windows": ["/std:c++14"],
+        "@platforms//os:windows": ["/std:c++14", "/permissive-"],
         "//conditions:default": ["-std=c++14", "-Wall", "-Wextra", "-Wpedantic"],
     }),
 )
