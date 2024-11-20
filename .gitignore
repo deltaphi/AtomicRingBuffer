@@ -35,5 +35,8 @@
 # IDE Specifics
 out
 .vs
-build
 .vscode
+
+# Bazel specifics
+bazel-*
+MODULE.bazel.lock
