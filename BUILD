@@ -20,16 +20,7 @@ cc_test(
 )
 
 # TODO
-# MSVC
-
-# C++14 standard without compiler extensions
-#set(CMAKE_CXX_STANDARD 14)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Code Coverage
 
 # integate clang-tidy
-
-# compiler options non-msvc
-# add_compile_options(-Wall -Wextra -pedantic)
