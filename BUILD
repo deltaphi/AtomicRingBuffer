@@ -3,7 +3,7 @@ cc_library(
     srcs = glob(["AtomicRingBuffer/*.cpp"]),
     hdrs = glob(["AtomicRingBuffer/*.h"]),
     copts = select({
-        "@platforms//os:windows": [],
+        "@platforms//os:windows": ["/std:c++14"],
         "//conditions:default": ["-Wall", "-Wextra", "-Wpedantic"],
     }),
 )
