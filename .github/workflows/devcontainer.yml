@@ -1,0 +1,34 @@
+# This workflow builds and runs the repository's devcontainer to verify:
+# 1. The devcontainer image can be built.
+# 2. The code can be configured and compiled inside the devcontainer.
+# 3. The unit tests can be executed inside the devcontainer.
+
+name: Devcontainer CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  devcontainer:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Build and run tests inside the devcontainer
+      uses: devcontainers/ci@v0.3
+      with:
+        imageName: ghcr.io/deltaphi/atomicringbuffer/devcontainer
+        cacheFrom: ghcr.io/deltaphi/atomicringbuffer/devcontainer
+        push: never
+        configFile: .devcontainer/devcontainer.json
+        runCmd: |
+          cmake --preset Linux \
+            && cmake --build --preset build-Linux \
+            && ./build/AtomicRingBufferTest
