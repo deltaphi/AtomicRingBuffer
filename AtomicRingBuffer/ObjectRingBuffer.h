@@ -14,6 +14,7 @@ template <typename T, uint16_t elemCapacity, size_t alignment = alignof(T)>
 class ObjectRingBuffer {
  public:
   static_assert(elemCapacity > 0, "Cannot have Buffer with 0 capacity.");
+  static_assert(alignment >= alignof(T), "Buffer alignment must satisfy the element type's alignment.");
 
   using Delegate_t = AtomicRingBuffer;
   using size_type = Delegate_t::size_type;
