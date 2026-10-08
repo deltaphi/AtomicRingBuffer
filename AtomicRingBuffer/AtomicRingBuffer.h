@@ -73,6 +73,11 @@ class AtomicRingBuffer {
 
   size_type capacity() const { return bufferSize_; }
 
+  /**
+   * Published byte count, always bounded by capacity(). During concurrent activity this is an approximate
+   * observation, not a reservation or a consistent snapshot; use allocate()/peek() to obtain usable ranges.
+   * init() must not run concurrently with this or any other buffer operation.
+   */
   size_type size() const {
     size_type bytesAvailable = 0;
     size_type currentReadIdx = readIdx_;
@@ -84,7 +89,8 @@ class AtomicRingBuffer {
       bytesAvailable += wrapToBufferSize(currentWriteIdx);
     }
 
-    return bytesAvailable;
+    // An observer can sample indices from different buffer generations while both endpoints advance.
+    return bytesAvailable > bufferSize_ ? bufferSize_ : bytesAvailable;
   }
 
   bool empty() const { return readIdx_ == writeIdx_; }
