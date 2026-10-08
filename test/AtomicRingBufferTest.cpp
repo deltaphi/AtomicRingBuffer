@@ -61,6 +61,24 @@ TEST_F(NoBufferAtomicBufferFixture, EmptyBuffer_Consume) {
   EXPECT_EQ(ringBuffer.capacity(), 0);
 }
 
+TEST_F(NoBufferAtomicBufferFixture, ZeroCapacity_RejectsCommit) {
+  ringBuffer.init(buffer, 0);
+
+  const Mem mem{buffer, 1};
+  EXPECT_EQ(ringBuffer.publish(mem), 0);
+  EXPECT_EQ(ringBuffer.consume(mem), 0);
+  EXPECT_EQ(ringBuffer.size(), 0);
+}
+
+TEST_F(NoBufferAtomicBufferFixture, NullStorage_RejectsCommit) {
+  ringBuffer.init(nullptr, kBufferSize);
+
+  const Mem mem{buffer, 1};
+  EXPECT_EQ(ringBuffer.publish(mem), 0);
+  EXPECT_EQ(ringBuffer.consume(mem), 0);
+  EXPECT_EQ(ringBuffer.size(), 0);
+}
+
 // Test operation on an initialized but empty buffer
 
 TEST_F(BufferedAtomicBufferFixture, EmptyBuffer_Size_Capacity) {

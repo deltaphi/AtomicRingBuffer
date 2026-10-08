@@ -58,6 +58,10 @@ AtomicRingBuffer::MemoryRange AtomicRingBuffer::allocate(const size_type section
 
 AtomicRingBuffer::size_type AtomicRingBuffer::commit(atomic_size_type &sectionBegin, atomic_size_type &sectionEnd,
                                                      const MemoryRange data) {
+  if (buffer_ == nullptr || bufferSize_ == 0 || data.ptr == nullptr) {
+    return 0;
+  }
+
   if (buffer_ <= data.ptr && data.ptr <= &buffer_[bufferSize_ - 1]) {
     // Check whether there was actually memory allocated that is now being published.
     const size_type requestedIndex = (data.ptr - buffer_);
