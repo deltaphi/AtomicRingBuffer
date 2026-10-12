@@ -1,6 +1,6 @@
 {
   "name": "AtomicRingBuffer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A lock-free C++ Ring Buffer implementation for single-reader-single-writer scenarios.",
   "repository": {
       "type": "git",
