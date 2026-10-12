@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "devcontainer": {
+    "enabled": true
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^CMakeLists\\.txt\\.in$/"],
+      "matchStrings": [
+        "GIT_REPOSITORY\\s+https://github\\.com/google/googletest\\.git\\s+GIT_TAG\\s+(?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "google/googletest",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "GoogleTest 1.17 and later require C++17; this project requires C++14.",
+      "matchPackageNames": ["google/googletest"],
+      "allowedVersions": "<1.17.0"
+    }
+  ]
+}
